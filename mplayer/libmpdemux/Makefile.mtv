@@ -1,0 +1,34 @@
+include ../config.mak
+
+LIBNAME_COMMON   = libmpdemux_mtv.a
+LIBNAME_MENCODER = libmpmux_mtv.a
+
+SRCS_COMMON = asfheader.c \
+              aviheader.c \
+              aviprint.c \
+              mtv_demuxer.c \
+              demux_demuxers.c \
+              extension.c \
+              mf.c \
+              mp3_hdr.c \
+              mpeg_hdr.c \
+              mpeg_packetizer.c \
+              parse_es.c \
+              parse_mp4.c \
+              video.c \
+              yuv4mpeg.c \
+              yuv4mpeg_ratio.c \
+              demux_dab.c \
+              demux_cmmb_inno.c
+
+SRCS_MENCODER = muxer.c \
+                muxer_avi.c \
+                muxer_mpeg.c \
+                muxer_rawaudio.c \
+                muxer_rawvideo.c \
+
+SRCS_MENCODER-$(LIBAVFORMAT)           += muxer_lavf.c
+
+include ../mpcommon.mak
+
+dep depend: CFLAGS += $(EXTRAXX_INC)

@@ -1,0 +1,102 @@
+#============================= Necessary Input  parameters
+# dir:		T_FILE_DIR	I_TEST_DIR	CHIP_DIR	CCROOT
+#		ELF_DIR		GCC_EXEC_PREFIX
+# file:		MACRO_FILE
+#
+#============================= Optional Input parameters
+# macro:	EXTRA_OBJ (for multi c file test like power test)
+#		GCC_EXTRA_OPT	LD_EXTRA_OPT	MC_LIB_EXTRA	GCC_LIB_EXTRA
+#		ENDIAN		GCC_OPTIMIZE_OPT
+
+include jzsys.mak
+#============================= Path define
+DESTDIR 	=
+#============================= Tools define
+PREFIX 		= $(DESTDIR)/usr/local
+BINDIR 		= $(DESTDIR)/usr/local/bin
+LIBDIR 		= $(DESTDIR)/usr/local/lib
+
+CC 		= /noahos/ToolChain/gcc-mips/bin/noahos-gcc
+CXX		= /noahos/ToolChain/gcc-mips/noahos-g++
+AS 		= /noahos/ToolChain/gcc-mips/bin/noahos-gcc
+LD 		= /noahos/ToolChain/gcc-mips/bin/noahos-objcopy
+STR		= /noahos/ToolChain/gcc-mips/bin/noahos-strip -g -x
+AR 		= /noahos/ToolChain/gcc-mips/bin/noahos-ar rus
+RAN 		=/noahos/ToolChain/gcc-mips/bin/noahos-ranlib
+MAKE		= make
+RM 		= rm -f
+CP 		= cp
+RM_DIR		= rm -rf
+W_OPTS  		= -Wall -finline-functions -fomit-frame-pointer 
+CCFLAGS  	= -c -O2 -mtune=r4600 -mips32 -mlong-calls -fno-builtin $(W_OPTS) -DIPU_THROUGHT_MODE \
+		  -mno-abicalls -fno-pic -pipe -G 0 -msoft-float
+
+CXXFLAGS		= -mips32 -O2 -mno-abicalls -fno-pic -fno-builtin \
+	           	-fno-exceptions -ffunction-sections -finit-priority \
+	  		-fshort-wchar -fomit-frame-pointer -msoft-float -G 0 -nostdinc++
+
+JZC_MACRO	= src/jzsoc/jzmacro.h
+
+GCC_OPT		= $(ARCHITECTURE) $(BUS) $(ENDIANNESS) -imacros $(JZC_MACRO) 
+
+INCLUDE 		= -I./src -I./src/bitstream -I./src/quant -I./src/dct -I./src/image -I./src/prediction -I./src/utils -I./src/jzsoc \
+              -I../../../  -I../../../uc_inc -I/noahos/Include/libc -I/noahos/Include
+
+CFLAGS 		= $(CCFLAGS) $(INCLUDE) $(GCC_OPT)
+ASFLAGS 		= $(CFLAGS) -D_ASSEMBLER_
+
+XVID_LIB  	= libxvidcore.a
+
+AUX_BIN		= xvid_aux_task.bin
+
+#============================= src list
+XVID_OBJ	= 	src/xvid_dec.o \
+	          src/bitstream/cbp.o \
+	          src/quant/quant_matrix.o \
+	          src/image/colorspace.o \
+	          src/image/postprocessing.o \
+	          src/image/interpolate8x8.o \
+	          src/image/qpel.o \
+	          src/prediction/mbprediction.o \
+	          src/utils/mem_align.o \
+	          src/utils/mem_transfer.o \
+		src/utils/emms.o \
+		src/utils/timer.o  \
+\
+ 	src/quant/dequant_h263.o \
+            src/bitstream/bitstream.o \
+	          src/quant/dequant_mpeg.o \
+	          src/dct/idct.o \
+	          src/bitstream/mbcoding.o \
+	          src/image/image_dec.o \
+	          src/motion/gmc.o \
+	 	src/decoder.o
+
+#============================= Make action define
+all: $(XVID_LIB) #$(AUX_BIN)
+
+$(XVID_LIB): $(XVID_OBJ) $(MXU_OBJ)
+	$(AR) $(XVID_LIB) $(XVID_OBJ) $(MXU_OBJ)
+	$(RAN) $(XVID_LIB)
+
+$(XVID_OBJ): %.o: %.c
+	@echo "Information: compile $@"
+	$(CC) $(CFLAGS) -S -o $@.mxu 	$<
+	mxu_as $@.mxu > $@.s
+	$(CC) $(CFLAGS) -c -o 	$@ 	$@.s
+
+$(AUX_BIN)::
+	$(MAKE) -C src/jzsoc
+	cp -f src/jzsoc/xvid_aux_task.bin .
+	@echo "Information: aux bin generated successfully!"
+
+rmaux::
+	$(MAKE) -C src/jzsoc clean
+	rm -f $(AUX_BIN)
+
+clean::
+	rm -f `find . -name *.mux` 
+	rm -f `find . -name *.s` 
+	rm -f *.o $(XVID_OBJ) $(MXU_OBJ) *.a *.s *.mid *.mxu
+
+.PHONY: all rmaux clean

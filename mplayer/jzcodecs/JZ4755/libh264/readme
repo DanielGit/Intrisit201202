@@ -1,0 +1,55 @@
+
++++ About functions in tcsm0 +++
+
+  Two tcsm text: ( CAVLC / CABAC )
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                         %%% 
+%%%               2009_04_28                %%%
+%%%                                         %%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+++++++++++++++  function address
+
+  h264_cavlc_tcsm (wx) : ORIGIN = 0xF4001000, LENGTH = 4K
+  h264_cabac_tcsm (wx) : ORIGIN = 0xF4002000, LENGTH = 4K
+
+++++++++++++++
+
+  .h264_cavlc_tcsm_text :
+  {
+    *(.h264_cavlc_tcsm_text)
+  } > h264_cavlc_tcsm
+
+  .h264_cabac_tcsm_text :
+  {
+    *(.h264_cabac_tcsm_text)
+  } > h264_cabac_tcsm
+
+++++++++++++++  bin name
+
+  h264_cavlc_tcsm_text.bin
+  h264_cabac_tcsm_text.bin
+
+++++++++++++++  load address
+
+h264_cavlc_tcsm_text = 0xF4001000
+h264_cabac_tcsm_text = 0xF4002000
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                         %%% 
+%%%               2009_05_11                %%%
+%%%                                         %%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+++++++++++++++  function address
+
+  h264_cavlc_tcsm (wx) : ORIGIN = 0xF4000000, LENGTH = 8K
+  h264_cabac_tcsm (wx) : ORIGIN = 0xF4002000, LENGTH = 8K
+
+++++++++++++++  load address
+
+h264_cavlc_tcsm_text = 0xF4000000
+h264_cabac_tcsm_text = 0xF4002000
+

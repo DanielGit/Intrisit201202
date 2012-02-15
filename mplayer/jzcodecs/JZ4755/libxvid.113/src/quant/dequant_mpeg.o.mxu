@@ -1,0 +1,174 @@
+	.file	1 "dequant_mpeg.c"
+	.section .mdebug.abi32
+	.previous
+	.text
+	.align	2
+	.globl	dequant_mpeg_intra_mxu
+	.ent	dequant_mpeg_intra_mxu
+dequant_mpeg_intra_mxu:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	li	$2,-2048			# 0xfffffffffffff800
+ #APP
+	S32I2M xr3,$2
+ #NO_APP
+	li	$3,2047			# 0x7ff
+ #APP
+	S32I2M xr4,$3
+	S32I2M xr5,$5
+ #NO_APP
+	lh	$2,0($4)
+ #APP
+	S32MUL xr0,xr6,$2,$6
+	S32LUI xr9,1,ptn0
+	D16MUL xr0,xr6,xr9,xr6,WW
+	S32MIN xr6,xr6,xr4
+	S32MAX xr6,xr6,xr3
+ #NO_APP
+	move	$2,$0
+	addiu	$4,$4,-4
+	addiu	$7,$7,-4
+	li	$3,32			# 0x20
+$L2:
+ #APP
+	S32LDI xr1,$4,4
+	S32LDI xr2,$7,4
+	D16MUL xr13,xr9,xr1,xr14,LW
+	D16CPS xr1,xr1,xr1
+	D16MUL xr7,xr5,xr2,xr8,LW
+	S32SFL xr15,xr7,xr8,xr2,ptn3
+	D16MUL xr7,xr1,xr2,xr8,WW
+	D32SLR xr7,xr7,xr8,xr8,3
+	S32CPS xr7,xr7,xr13
+	S32MAX xr10,xr7,xr3
+	S32MIN xr10,xr10,xr4
+	S32CPS xr8,xr8,xr14
+	S32MAX xr11,xr8,xr3
+	S32MIN xr11,xr11,xr4
+	S32SFL xr0,xr10,xr11,xr12,ptn3
+	S32STD xr12,$4,0
+ #NO_APP
+	addiu	$2,$2,1
+	bne	$2,$3,$L2
+ #APP
+	S16STD xr6,$4,-124,ptn0
+ #NO_APP
+	.set	noreorder
+	.set	nomacro
+	j	$31
+	move	$2,$0
+	.set	macro
+	.set	reorder
+
+	.end	dequant_mpeg_intra_mxu
+	.size	dequant_mpeg_intra_mxu, .-dequant_mpeg_intra_mxu
+	.align	2
+	.globl	dequant_mpeg_inter_c
+	.ent	dequant_mpeg_inter_c
+dequant_mpeg_inter_c:
+	.frame	$sp,32,$31		# vars= 0, regs= 4/0, args= 16, gp= 0
+	.mask	0x80070000,-4
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	addiu	$sp,$sp,-32
+	lui	$2,%hi(get_inter_matrix)
+	sw	$18,24($sp)
+	sw	$17,20($sp)
+	sw	$16,16($sp)
+	move	$18,$4
+	sw	$31,28($sp)
+	move	$4,$7
+	addiu	$2,$2,%lo(get_inter_matrix)
+	move	$16,$5
+	jal	$2
+	move	$17,$6
+
+	move	$7,$2
+	move	$5,$18
+	move	$9,$0
+	move	$8,$0
+	li	$11,2047			# 0x7ff
+	j	$L9
+	li	$10,128			# 0x80
+
+$L25:
+	sh	$0,0($5)
+$L12:
+	lh	$2,0($5)
+	addiu	$8,$8,2
+	addiu	$7,$7,2
+	addiu	$5,$5,2
+	beq	$8,$10,$L24
+	xor	$9,$9,$2
+
+$L9:
+	addu	$2,$16,$8
+	lh	$4,0($2)
+	beq	$4,$0,$L25
+	subu	$2,$0,$4
+
+	sll	$3,$4,1
+	sll	$2,$2,1
+	addiu	$3,$3,1
+	bltz	$4,$L26
+	addiu	$6,$2,1
+
+	mul	$2,$3,$17
+	lhu	$3,0($7)
+	addiu	$8,$8,2
+	addiu	$7,$7,2
+	mul	$3,$3,$2
+	srl	$3,$3,4
+	sltu	$2,$3,2048
+	movz	$3,$11,$2
+	sh	$3,0($5)
+	lh	$2,0($5)
+	addiu	$5,$5,2
+	bne	$8,$10,$L9
+	xor	$9,$9,$2
+
+$L24:
+	andi	$2,$9,0x1
+	bne	$2,$0,$L27
+	lw	$31,28($sp)
+
+	lhu	$2,126($18)
+	xori	$2,$2,0x1
+	sh	$2,126($18)
+	lw	$31,28($sp)
+$L27:
+	lw	$18,24($sp)
+	lw	$17,20($sp)
+	lw	$16,16($sp)
+	move	$2,$0
+	j	$31
+	addiu	$sp,$sp,32
+
+$L26:
+	lhu	$2,0($7)
+	mul	$2,$6,$2
+	mul	$2,$17,$2
+	srl	$2,$2,4
+	subu	$3,$0,$2
+	slt	$2,$2,2049
+	beq	$2,$0,$L17
+	li	$4,-2048			# 0xfffffffffffff800
+
+	sll	$4,$3,16
+	sra	$4,$4,16
+$L17:
+	j	$L12
+	sh	$4,0($5)
+
+	.set	macro
+	.set	reorder
+	.end	dequant_mpeg_inter_c
+	.size	dequant_mpeg_inter_c, .-dequant_mpeg_inter_c
+
+	.comm	dequant_mpeg_intra,4,4
+
+	.comm	dequant_mpeg_inter,4,4
+	.ident	"GCC: (GNU) 4.1.2"

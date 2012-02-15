@@ -1,0 +1,216 @@
+TOP = ../../..
+include ../../configure.mak
+include ../../bspconfig.mak
+include ../config.mak
+
+OBJCOPY := mipsel-linux-objcopy
+OBJDUMP := mipsel-linux-objdump
+
+VD_LDOPT = --static -nostdlib -T $(SECT_LDS_VD_PLUG)
+AD_LDOPT = --static -nostdlib -T $(SECT_LDS_AD_PLUG)
+
+AVCODEC_CFLAGS= -DHAVE_AV_CONFIG_H -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_ISOC9X_SOURCE
+
+######################### total plugin #######################################
+AVCOMM = av_codec_table av_codec_mtvtable
+ADPLUGIN = mpcodecs_ad_libmad mpcodecs_ad_faad mpcodecs_ad_mtvfaad mpcodecs_ad_msgsm mpcodecs_ad_hwac3 mpcodecs_ad_liba52
+VDPLUGIN = mpcodecs_vd_realvid mpcodecs_vd_libmpeg2
+
+AD_FFMPEG_PLUGIN = ffmpeg_ad_one ffmpeg_ad_two ffmpeg_ad_three ffmpeg_ad_four ffmpeg_ad_five ffmpeg_ad_six
+VD_FFMPEG_PLUGIN = ffmpeg_vd_h264 ffmpeg_vd_mtvh264 ffmpeg_vd_mpeg4 ffmpeg_vd_mpegvideo ffmpeg_vd_mpegmisc ffmpeg_vd_mpegmisc2
+
+######################### comm dep files ######################################
+VDCOMMDEP = vd_start.o link_vd.xn ../../video/rel/video.elf
+ADCOMMDEP = ad_start.o link_ad.xn ../../video/rel/video.elf
+MTVADCOMMDEP = ad_start.o link_ad.xn ../../mtvdecoder/rel/mtvdecoder.elf
+
+FFMPEG_COMMDEP = ../../video/rel/video.elf
+FFMPEG_MTVCOMMDEP = ../../mtvdecoder/rel/mtvdecoder.elf
+
+######################### av_codec_table source files #########################
+
+SRCS_INIT_TABLE = av_codec_table.c ../libmpcodecs/ad_libvorbis.c ../libmpdemux/demux_ogg.c
+OBJS_INIT_TABLE = $(addsuffix .o, $(basename $(SRCS_INIT_TABLE)) )
+
+MTVSRCS_INIT_TABLE = mtvav_codec_table.c 
+MTVOBJS_INIT_TABLE = $(addsuffix .o, $(basename $(MTVSRCS_INIT_TABLE)) )
+
+SRCS_INIT_MTVTABLE = av_codec_mtvtable.c ../libmpcodecs/ad_libvorbis.c ../libmpdemux/demux_ogg.c
+OBJS_INIT_MTVTABLE = $(addsuffix .o, $(basename $(SRCS_INIT_MTVTABLE)) )
+
+######################### video source files ##################################
+SRCS_VD_REALVID = ../libmpcodecs/vd_realvid.c
+OBJS_VD_REALVID = $(addsuffix .o, $(basename $(SRCS_VD_REALVID)) )
+
+SRCS_VD_LIBMPEG2 = ../libmpcodecs/vd_libmpeg2.c
+OBJS_VD_LIBMPEG2 = $(addsuffix .o, $(basename $(SRCS_VD_LIBMPEG2)) )
+
+SRCS_VD_H264 = ../libavcodec/h264.c ../libavcodec/h264idct.c ../libavcodec/h264pred.c   \
+               ../libavcodec/cabac.c ../libavcodec/h264dsputil.c ../libavcodec/golomb.c \
+               ../libavcodec/error_resilience.c
+OBJS_VD_H264 = $(addsuffix .o, $(basename $(SRCS_VD_H264)) )
+
+SRCS_VD_MTVH264 = ../libavcodec/mtvh264.c ../libavcodec/h264idct.c ../libavcodec/h264pred.c   \
+               ../libavcodec/cabac.c ../libavcodec/h264dsputil.c ../libavcodec/golomb.c \
+               ../libavcodec/error_resilience.c ../libavcodec/mpegvideo.c ../libavcodec/h264_parser.c
+OBJS_VD_MTVH264 = $(addsuffix .o, $(basename $(SRCS_VD_MTVH264)) )
+
+SRCS_VD_MPEG4 = ../libavcodec/h263.c ../libavcodec/h263dec.c ../libavcodec/msmpeg4.c  \
+                ../libavcodec/msmpeg4data.c ../libavcodec/rv10.c ../libavcodec/vc1.c  \
+                ../libavcodec/vc1data.c ../libavcodec/vc1dsp.c  \
+                ../libavcodec/h264dsputil.c ../libavcodec/h264idct.c ../libavcodec/error_resilience.c
+
+OBJS_VD_MPEG4 = $(addsuffix .o, $(basename $(SRCS_VD_MPEG4)) )
+
+SRCS_VD_MPEGVIDEO = ../libavcodec/mpeg12.c ../libavcodec/mpeg12data.c ../libavcodec/asv1.c  \
+                    ../libavcodec/avs.c ../libavcodec/cavs.c ../libavcodec/cavsdec.c \
+                    ../libavcodec/sp5xdec.c ../libavcodec/rtjpeg.c ../libavcodec/nuv.c \
+                    ../libavcodec/cavsdsp.c ../libavcodec/h261dec.c ../libavcodec/h261.c \
+                    ../libavcodec/mjpegdec.c ../libavcodec/jpeglsdec.c ../libavcodec/jpegls.c \
+                    ../libavcodec/mjpeg.c ../libavcodec/mjpegbdec.c ../libavcodec/sgidec.c \
+                    ../libavcodec/smacker.c ../libavcodec/vp3.c ../libavcodec/vp3dsp.c \
+                    ../libavcodec/xiph.c ../libavcodec/tiertexseqv.c ../libavcodec/tiff.c  \
+                    ../libavcodec/lzw.c ../libavcodec/truemotion1.c ../libavcodec/truemotion2.c  \
+                    ../libavcodec/tscc.c ../libavcodec/txd.c ../libavcodec/s3tc.c \
+                    ../libavcodec/ulti.c ../libavcodec/vcr1.c ../libavcodec/vmdav.c \
+                    ../libavcodec/vmnc.c ../libavcodec/vp5.c ../libavcodec/vp6.c ../libavcodec/vp56.c \
+                    ../libavcodec/vp56data.c  ../libavcodec/vqavideo.c ../libavcodec/wnv1.c \
+                    ../libavcodec/xan.c ../libavcodec/xl.c ../libavcodec/xsubdec.c ../libavcodec/golomb.c \
+                    ../libavcodec/error_resilience.c
+
+OBJS_VD_MPEGVIDEO = $(addsuffix .o, $(basename $(SRCS_VD_MPEGVIDEO)) )
+
+SRCS_VD_MPEGMISC = ../libavcodec/bethsoftvideo.c ../libavcodec/aasc.c \
+                    ../libavcodec/cinepak.c ../libavcodec/cljr.c ../libavcodec/cscd.c \
+                    ../libavcodec/cyuv.c ../libavcodec/dnxhddec.c ../libavcodec/dnxhddata.c \
+                    ../libavcodec/ffv1.c ../libavcodec/rangecoder.c ../libavcodec/huffyuv.c \
+                    ../libavcodec/flicvideo.c ../libavcodec/4xm.c ../libavcodec/fraps.c \
+                    ../libavcodec/dsicinav.c ../libavcodec/dv.c ../libavcodec/8bps.c \
+                    ../libavcodec/gifdec.c ../libavcodec/bmp.c ../libavcodec/c93.c   \
+                    ../libavcodec/idcinvideo.c ../libavcodec/indeo2.c ../libavcodec/indeo3.c \
+                    ../libavcodec/interplayvideo.c ../libavcodec/kmvc.c ../libavcodec/loco.c \
+                    ../libavcodec/lzw.c
+
+OBJS_VD_MPEGMISC = $(addsuffix .o, $(basename $(SRCS_VD_MPEGMISC)) )
+
+SRCS_VD_MPEGMISC2 = ../libavcodec/mmvideo.c ../libavcodec/msrle.c \
+                    ../libavcodec/msvideo1.c ../libavcodec/lcldec.c ../libavcodec/smc.c \
+                    ../libavcodec/targa.c ../libavcodec/ptx.c ../libavcodec/qdrw.c \
+                    ../libavcodec/qpeg.c ../libavcodec/qtrle.c ../libavcodec/rawdec.c \
+                    ../libavcodec/svq1dec.c ../libavcodec/svq1.c \
+                    ../libavcodec/roqvideodec.c ../libavcodec/roqvideo.c ../libavcodec/rpza.c
+OBJS_VD_MPEGMISC2 = $(addsuffix .o, $(basename $(SRCS_VD_MPEGMISC2)) )
+
+######################### audio source files ##################################
+SRCS_AD_LIBMAD = ../libmpcodecs/ad_libmad.c
+OBJS_AD_LIBMAD = $(addsuffix .o, $(basename $(SRCS_AD_LIBMAD)) )
+
+SRCS_AD_FAAD = ../libmpcodecs/ad_faad.c
+OBJS_AD_FAAD = $(addsuffix .o, $(basename $(SRCS_AD_FAAD)) )
+
+SRCS_AD_MSGSM = ../libmpcodecs/ad_msgsm.c ../libmpcodecs/native/xa_gsm.c
+OBJS_AD_MSGSM = $(addsuffix .o, $(basename $(SRCS_AD_MSGSM)) )
+
+SRCS_AD_HWAC3 = ../libmpcodecs/ad_hwac3.c
+OBJS_AD_HWAC3 = $(addsuffix .o, $(basename $(SRCS_AD_HWAC3)) )
+
+SRCS_AD_LIBA52 = ../libmpcodecs/ad_liba52.c
+OBJS_AD_LIBA52 = $(addsuffix .o, $(basename $(SRCS_AD_LIBA52)) )
+
+SRCS_AD_ONE = ../libavcodec/mace.c ../libavcodec/shorten.c ../libavcodec/sonic.c \
+              ../libavcodec/golomb.c ../libavcodec/ws-snd1.c
+OBJS_AD_ONE = $(addsuffix .o, $(basename $(SRCS_AD_ONE)) )
+ADLINK_ONE_LIBS = ../../LIBS/libwmafix.a
+
+SRCS_AD_TWO = ../libavcodec/mpegaudiodec.c ../libavcodec/mpegaudio.c ../libavcodec/decode_table4_3.c
+OBJS_AD_TWO = $(addsuffix .o, $(basename $(SRCS_AD_TWO)) )
+
+SRCS_AD_THREE = ../libavcodec/pcm.c ../libavcodec/adpcm.c ../libavcodec/adx.c ../libavcodec/g726.c    \
+              ../libavcodec/dpcm.c ../libavcodec/apedec.c ../libavcodec/alac.c ../libavcodec/dca.c    \
+              ../libavcodec/flac.c ../libavcodec/mdct.c ../libavcodec/fft.c       \
+              ../libavcodec/ra144.c ../libavcodec/ra288.c ../libavcodec/cook_rm.c
+OBJS_AD_THREE = $(addsuffix .o, $(basename $(SRCS_AD_THREE)) )
+
+SRCS_AD_FOUR = ../libavcodec/mpc.c ../libavcodec/qdm2.c ../libavcodec/truespeech.c ../libavcodec/tta.c \
+               ../libavcodec/wavpack.c ../libavcodec/atrac3.c ../libavcodec/imc.c \
+               ../libavcodec/fft.c ../libavcodec/mdct.c  \
+               ../libavcodec/mpegaudiodec.c ../libavcodec/mpegaudio.c
+OBJS_AD_FOUR = $(addsuffix .o, $(basename $(SRCS_AD_FOUR)) )
+
+SRCS_AD_FIVE = ../libavcodec/ac3dec.c ../libavcodec/ac3.c ../libavcodec/vorbis_dec.c ../libavcodec/vorbis.c \
+               ../libavcodec/vorbis_data.c ../libavcodec/xiph.c ../libavcodec/mdct.c ../libavcodec/fft.c
+OBJS_AD_FIVE = $(addsuffix .o, $(basename $(SRCS_AD_FIVE)) )
+
+SRCS_AD_SIX = ../libavcodec/libamr.c
+OBJS_AD_SIX = $(addsuffix .o, $(basename $(SRCS_AD_SIX)) )
+ADLINK_SIX_LIBS = ../amr/spc.a ../amr/fipop.a
+
+######################### all need building plg and option ###########################
+
+CFLAGS += $(CFLAGS-yes) $(OPTFLAGS)
+
+all: $(AVCOMM) $(VDPLUGIN) $(ADPLUGIN) $(VD_FFMPEG_PLUGIN) $(AD_FFMPEG_PLUGIN)
+
+########################## build codec tables #######################################
+
+
+########################## build codec tables #######################################
+av_codec_mtvtable: $(MTVOBJS_INIT_TABLE) clib.o link_ad.xn Makefile ../../mtvdecoder/rel/mtvdecoder.elf
+	echo "" > newsym.lds
+	$(CC)  $(AD_LDOPT) -o $@.elf $(MTVOBJS_INIT_TABLE) clib.o  -lm &> undsym.err; true
+	./genplglds ../../mtvdecoder/rel/mtvdecoder.elf undsym.err > newsym.lds
+	$(CC)  $(AD_LDOPT) -o $@.elf $(MTVOBJS_INIT_TABLE) clib.o -lm
+	$(OBJCOPY) -O binary $@.elf $@
+	cp -f $@ ../../HostLink/$@.bin
+
+########################## build video plugin #######################################
+
+ffmpeg_vd_mtvh264: $(OBJS_VD_MTVH264) $(FFMPEG_MTVCOMMDEP) Makefile link_vd.xn ffmpeg_h264_start.o
+	echo "" > newsym.lds
+	$(CC) $(VD_LDOPT) $(AVCODEC_CFLAGS) -o $@.elf ffmpeg_h264_start.o $(OBJS_VD_MTVH264) &> undsym.err; true
+	./genplglds ../../mtvdecoder/rel/mtvdecoder.elf undsym.err > newsym.lds
+	$(CC) $(VD_LDOPT) $(AVCODEC_CFLAGS) -o $@.elf ffmpeg_h264_start.o $(OBJS_VD_MTVH264)
+	$(OBJCOPY) -O binary $@.elf $@
+	cp -f $@ ../../HostLink/$@.bin
+
+
+MIDS_AD_LIBMAD = $(OBJS_AD_LIBMAD:.o=.s)
+ASMS_AD_LIBMAD = $(OBJS_AD_LIBMAD:.o=.mid)
+
+$(OBJS_AD_LIBMAD):%.o:%.s
+	$(CC) $(ASFLAGS) -c -o $@ $<
+$(MIDS_AD_LIBMAD):%.s:%.mid
+	mxu_as $< > $@
+$(ASMS_AD_LIBMAD):%.mid:%.c
+	$(CC) $(CFLAGS) -S -o $@ $<
+
+
+mpcodecs_ad_mtvfaad: $(OBJS_AD_FAAD) $(MTVADCOMMDEP) Makefile link_ad.xn
+	echo "" > newsym.lds
+	$(CC) $(AD_LDOPT) -o $@.elf ad_start.o $(OBJS_AD_FAAD)  ../libfaad2/libfaad2.a &> undsym.err; true
+	./genplglds ../../mtvdecoder/rel/mtvdecoder.elf undsym.err > newsym.lds
+	$(CC) $(AD_LDOPT) -o $@.elf ad_start.o $(OBJS_AD_FAAD)  ../libfaad2/libfaad2.a
+	$(OBJCOPY) -O binary $@.elf $@
+	cp -f $@ ../../HostLink/$@.bin
+
+
+
+################################# dependence ##########################################
+
+%.o:%.s
+	$(CC) $(ASFLAGS) -c -o $@ $<
+%.s:%.mid
+	mxu_as $< > $@
+%.mid:%.c 
+	$(CC) $(CFLAGS) -S -o $@ $<
+
+###############################################################################
+clean::
+	rm -f *.o mpcodecs_vd_* mpcodecs_ad_* ffmpeg_vd_* ffmpeg_ad_* *.elf av_codec_table av_codec_mtvtable
+
+distclean:: clean
+	rm -f .depend
+
+dep depend::
+	$(CC) -MM $(CFLAGS) $(OPTFLAGS) $(SRCS_COMMON) $(SRCS_MPLAYER) 1>.depend
+

@@ -1,0 +1,472 @@
+	.file	1 "quant_matrix.c"
+	.section .mdebug.abi32
+	.previous
+	.text
+	.align	2
+	.globl	get_intra_matrix
+	.ent	get_intra_matrix
+get_intra_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	j	$31
+	move	$2,$4
+
+	.set	macro
+	.set	reorder
+	.end	get_intra_matrix
+	.size	get_intra_matrix, .-get_intra_matrix
+	.align	2
+	.globl	get_inter_matrix
+	.ent	get_inter_matrix
+get_inter_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	j	$31
+	addiu	$2,$4,512
+
+	.set	macro
+	.set	reorder
+	.end	get_inter_matrix
+	.size	get_inter_matrix, .-get_inter_matrix
+	.align	2
+	.globl	get_default_intra_matrix
+	.ent	get_default_intra_matrix
+get_default_intra_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lui	$2,%hi(default_intra_matrix)
+	j	$31
+	addiu	$2,$2,%lo(default_intra_matrix)
+
+	.set	macro
+	.set	reorder
+	.end	get_default_intra_matrix
+	.size	get_default_intra_matrix, .-get_default_intra_matrix
+	.align	2
+	.globl	get_default_inter_matrix
+	.ent	get_default_inter_matrix
+get_default_inter_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lui	$2,%hi(default_inter_matrix)
+	j	$31
+	addiu	$2,$2,%lo(default_inter_matrix)
+
+	.set	macro
+	.set	reorder
+	.end	get_default_inter_matrix
+	.size	get_default_inter_matrix, .-get_default_inter_matrix
+	.align	2
+	.globl	set_intra_matrix
+	.ent	set_intra_matrix
+set_intra_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$7,$0
+	li	$12,1			# 0x1
+	li	$8,65536			# 0x10000
+	li	$11,64			# 0x40
+$L10:
+	addu	$3,$7,$5
+	li	$2,8			# 0x8
+	beq	$7,$0,$L13
+	li	$10,4			# 0x4
+
+	lbu	$2,0($3)
+	srl	$10,$2,1
+$L13:
+	andi	$3,$2,0xffff
+	divu	$0,$8,$3
+	teq	$3,$0,7
+	sh	$2,0($4)
+	xori	$2,$3,0x1
+	sltu	$2,$2,1
+	addu	$2,$10,$2
+	addiu	$7,$7,1
+	li	$9,65535			# 0xffff
+	sh	$2,128($4)
+	beq	$3,$12,$L16
+	mflo	$6
+
+	addiu	$2,$6,1
+	andi	$9,$2,0xffff
+$L16:
+	addiu	$2,$6,-1
+	sh	$9,256($4)
+	sh	$2,384($4)
+	bne	$7,$11,$L10
+	addiu	$4,$4,2
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	set_intra_matrix
+	.size	set_intra_matrix, .-set_intra_matrix
+	.align	2
+	.globl	set_inter_matrix
+	.ent	set_inter_matrix
+set_inter_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	addiu	$9,$4,128
+	li	$10,1			# 0x1
+	li	$8,65536			# 0x10000
+$L23:
+	lbu	$2,0($5)
+	addiu	$5,$5,1
+	andi	$6,$2,0xffff
+	divu	$0,$8,$6
+	teq	$6,$0,7
+	xori	$3,$6,0x1
+	sltu	$3,$3,1
+	sh	$2,512($4)
+	srl	$2,$2,1
+	addu	$2,$2,$3
+	sh	$2,640($4)
+	li	$3,65535			# 0xffff
+	beq	$6,$10,$L26
+	mflo	$7
+
+	addiu	$2,$7,1
+	andi	$3,$2,0xffff
+$L26:
+	addiu	$2,$7,-1
+	sh	$3,768($4)
+	sh	$2,896($4)
+	addiu	$4,$4,2
+	bne	$9,$4,$L23
+	nop
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	set_inter_matrix
+	.size	set_inter_matrix, .-set_inter_matrix
+	.align	2
+	.globl	is_custom_intra_matrix
+	.ent	is_custom_intra_matrix
+is_custom_intra_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lui	$2,%hi(default_intra_matrix)
+	lui	$3,%hi(default_intra_matrix+64)
+	addiu	$5,$2,%lo(default_intra_matrix)
+	j	$L32
+	addiu	$6,$3,%lo(default_intra_matrix+64)
+
+$L33:
+	beq	$5,$6,$L40
+	nop
+
+$L32:
+	lhu	$3,0($4)
+	lbu	$2,0($5)
+	addiu	$4,$4,2
+	beq	$3,$2,$L33
+	addiu	$5,$5,1
+
+	j	$31
+	li	$2,1			# 0x1
+
+$L40:
+	j	$31
+	move	$2,$0
+
+	.set	macro
+	.set	reorder
+	.end	is_custom_intra_matrix
+	.size	is_custom_intra_matrix, .-is_custom_intra_matrix
+	.align	2
+	.globl	is_custom_inter_matrix
+	.ent	is_custom_inter_matrix
+is_custom_inter_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lui	$2,%hi(default_inter_matrix)
+	lui	$3,%hi(default_inter_matrix+64)
+	addiu	$5,$2,%lo(default_inter_matrix)
+	j	$L42
+	addiu	$6,$3,%lo(default_inter_matrix+64)
+
+$L43:
+	beq	$5,$6,$L50
+	nop
+
+$L42:
+	lhu	$3,512($4)
+	lbu	$2,0($5)
+	addiu	$4,$4,2
+	beq	$3,$2,$L43
+	addiu	$5,$5,1
+
+	j	$31
+	li	$2,1			# 0x1
+
+$L50:
+	j	$31
+	move	$2,$0
+
+	.set	macro
+	.set	reorder
+	.end	is_custom_inter_matrix
+	.size	is_custom_inter_matrix, .-is_custom_inter_matrix
+	.align	2
+	.globl	init_mpeg_matrix
+	.ent	init_mpeg_matrix
+init_mpeg_matrix:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lui	$2,%hi(default_intra_matrix)
+	addiu	$10,$2,%lo(default_intra_matrix)
+	move	$5,$4
+	move	$8,$0
+	li	$12,1			# 0x1
+	li	$9,65536			# 0x10000
+	li	$11,64			# 0x40
+$L52:
+	li	$2,8			# 0x8
+	beq	$8,$0,$L55
+	li	$6,4			# 0x4
+
+	lbu	$2,0($10)
+	srl	$6,$2,1
+$L55:
+	andi	$3,$2,0xffff
+	divu	$0,$9,$3
+	teq	$3,$0,7
+	sh	$2,0($5)
+	xori	$2,$3,0x1
+	sltu	$2,$2,1
+	addu	$2,$6,$2
+	addiu	$8,$8,1
+	addiu	$10,$10,1
+	sh	$2,128($5)
+	li	$6,65535			# 0xffff
+	beq	$3,$12,$L58
+	mflo	$7
+
+	addiu	$2,$7,1
+	andi	$6,$2,0xffff
+$L58:
+	addiu	$2,$7,-1
+	sh	$6,256($5)
+	sh	$2,384($5)
+	bne	$8,$11,$L52
+	addiu	$5,$5,2
+
+	lui	$2,%hi(default_inter_matrix)
+	lui	$3,%hi(default_inter_matrix+64)
+	addiu	$8,$2,%lo(default_inter_matrix)
+	addiu	$10,$3,%lo(default_inter_matrix+64)
+	li	$9,1			# 0x1
+	li	$7,65536			# 0x10000
+$L60:
+	lbu	$2,0($8)
+	addiu	$8,$8,1
+	andi	$5,$2,0xffff
+	divu	$0,$7,$5
+	teq	$5,$0,7
+	xori	$3,$5,0x1
+	sltu	$3,$3,1
+	sh	$2,512($4)
+	srl	$2,$2,1
+	addu	$2,$2,$3
+	sh	$2,640($4)
+	li	$3,65535			# 0xffff
+	beq	$5,$9,$L63
+	mflo	$6
+
+	addiu	$2,$6,1
+	andi	$3,$2,0xffff
+$L63:
+	addiu	$2,$6,-1
+	sh	$3,768($4)
+	sh	$2,896($4)
+	bne	$8,$10,$L60
+	addiu	$4,$4,2
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	init_mpeg_matrix
+	.size	init_mpeg_matrix, .-init_mpeg_matrix
+	.rdata
+	.align	2
+	.type	default_intra_matrix, @object
+	.size	default_intra_matrix, 64
+default_intra_matrix:
+	.byte	8
+	.byte	17
+	.byte	18
+	.byte	19
+	.byte	21
+	.byte	23
+	.byte	25
+	.byte	27
+	.byte	17
+	.byte	18
+	.byte	19
+	.byte	21
+	.byte	23
+	.byte	25
+	.byte	27
+	.byte	28
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	28
+	.byte	30
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	28
+	.byte	30
+	.byte	32
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	28
+	.byte	30
+	.byte	32
+	.byte	35
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	28
+	.byte	30
+	.byte	32
+	.byte	35
+	.byte	38
+	.byte	25
+	.byte	26
+	.byte	28
+	.byte	30
+	.byte	32
+	.byte	35
+	.byte	38
+	.byte	41
+	.byte	27
+	.byte	28
+	.byte	30
+	.byte	32
+	.byte	35
+	.byte	38
+	.byte	41
+	.byte	45
+	.align	2
+	.type	default_inter_matrix, @object
+	.size	default_inter_matrix, 64
+default_inter_matrix:
+	.byte	16
+	.byte	17
+	.byte	18
+	.byte	19
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	17
+	.byte	18
+	.byte	19
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	18
+	.byte	19
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	25
+	.byte	19
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	27
+	.byte	20
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	25
+	.byte	26
+	.byte	27
+	.byte	28
+	.byte	21
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	27
+	.byte	28
+	.byte	30
+	.byte	22
+	.byte	23
+	.byte	24
+	.byte	26
+	.byte	27
+	.byte	28
+	.byte	30
+	.byte	31
+	.byte	23
+	.byte	24
+	.byte	25
+	.byte	27
+	.byte	28
+	.byte	30
+	.byte	31
+	.byte	33
+	.ident	"GCC: (GNU) 4.1.2"

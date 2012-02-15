@@ -1,0 +1,5 @@
+#! /bin/sh
+mipsel-linux-objcopy --only-section .tcsm_start -O binary mplayer tcsm_start.bin
+mipsel-linux-objcopy --only-section .tcsm_text -O binary mplayer tcsm_text.bin
+mipsel-linux-objcopy --only-section .tcsm_rear -O binary mplayer tcsm_rear.bin
+mipsel-linux-objcopy --remove-section .tcsm_start --remove-section .tcsm_text --remove-section .tcsm_rear -O elf32-tradlittlemips mplayer final_mplayer

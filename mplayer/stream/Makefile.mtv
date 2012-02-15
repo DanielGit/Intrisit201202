@@ -1,0 +1,18 @@
+include ../config.mak
+
+LIBNAME_COMMON = mtvstream.a
+
+SRCS_COMMON = open.c \
+              mtvstream.c \
+              stream_file.c \
+              stream_null.c \
+              url.c \
+              stream_dab.c \
+              stream_cmmb.c
+
+include ../mpcommon.mak
+
+clean::
+	rm -f realrtsp/*.o realrtsp/*.a realrtsp/*~ \
+	librtsp/*.o librtsp/*.a librtsp/*~ \
+	freesdp/*.o freesdp/*.a freesdp/*~

@@ -1,0 +1,101 @@
+
+#define android root dir
+
+export INGENIC_ANDROID_ROOT_DIR=/home/yliu/svnwork/android-sync
+export INGENIC_ANDROID_PRODUCT_NAME=apus
+
+#test compiler
+
+if [ $# != 1 ]
+then
+  echo "Usage: $0 [JZ4750 | JZ4755 ]"
+  exit 1
+fi
+
+if [ $1 != JZ4750 -a $1 != JZ4755 ]
+then
+  echo -e "\t$1 is not the JZ target cpu (JZ4750, JZ4755)\n"
+  exit 1
+fi
+
+if 
+mipsel-linux-gcc -v >/dev/null
+then
+  echo "Use compiler mipsel-linux for building"
+else
+  echo "Not found compiler mipsel-linux-gcc"
+  exit 1
+fi
+
+cat > junk.mak << EOF
+
+JZ47_LINUX := 1
+JZ4725_BSP := 0
+JZ4740_BSP := 0
+JZ4750_BSP := 0
+JZ4755_BSP := 0
+HAVE_ANDROID_OS := 1
+INGENIC_ANDROID_ROOT=$INGENIC_ANDROID_ROOT_DIR
+INGENIC_ANDROID_PRODUCT=$INGENIC_ANDROID_PRODUCT_NAME
+
+EOF
+
+if [ x$1 = xJZ4755 ]
+then
+sed -e 's/JZ4755_BSP := 0/JZ4755_BSP := 1/g' junk.mak > configure.mak
+fi
+
+if [ x$1 = xJZ4750 ]
+then
+sed -e 's/JZ4750_BSP := 0/JZ4750_BSP := 1/g' junk.mak > configure.mak
+fi
+
+rm -fv junk.mak
+
+#config libmad
+export CC="mipsel-linux-gcc -mips32"
+export CFLAGS="-O4"
+echo "++++ build libmad +++"
+
+#cd madlib/libmad-0.15.1b
+#./configure  --host=x86-redhat-linux --build=i386-redhat-linux --target=mipsel-linux --enable-fpm=mips  --disable-shared
+
+#cd madlib
+#make
+#unset CC CFLAGS
+#cd -
+
+#build mplayer
+BLDDIR=`pwd`
+echo "++++ build mplayer +++"
+rm -fv codecs.conf.h
+
+#if [ x$1 = xJZ4755 ]
+#then
+#./configure --host-cc=gcc --cc="mipsel-linux-gcc -mips32" --target=mips-linux --enable-cross-compile  \
+#            --disable-xinerama --disable-vm                                             \
+#            --enable-ossaudio --disable-esd --disable-ivtv                             \
+#            --enable-faad-fixed --disable-mp3lib --enable-mad --enable-libamr_nb                      \
+#	    --enable-xvid                                                                             \
+#            --with-extraincdir=$BLDDIR/madlib/libmad-0.15.1b --with-extralibdir=$BLDDIR/madlib        \
+
+#else
+
+#./configure --host-cc=gcc --cc="mipsel-linux-gcc -mips32" --target=mips-linux --enable-cross-compile  \
+#            --disable-xinerama --disable-vm                                             \
+#            --enable-ossaudio --disable-esd --disable-ivtv                             \
+#            --enable-faad-fixed --disable-mp3lib --enable-mad --enable-libamr_nb                      \
+#            --with-extraincdir=$BLDDIR/madlib/libmad-0.15.1b --with-extralibdir=$BLDDIR/madlib        \
+
+#fi
+
+#sed -e 's/CONFIG_WMAV1_DECODER/CONFIG_FIXWMAV1_DECODER/g'  \
+#    -e 's/CONFIG_WMAV2_DECODER/CONFIG_FIXWMAV2_DECODER/g' config.mak > t.mak
+
+#rm -f config.mak
+
+#mv t.mak config.mak
+
+#make
+
+

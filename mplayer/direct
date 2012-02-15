@@ -1,0 +1,4 @@
+cp -f mplayer.c mplayer_bak.c
+cp -f jz4750_soc.c jz4750_soc_bak.c
+cp -f mplayer.c mplayer_direct.c
+cp -f jz47_scale.c jz4750_soc.c

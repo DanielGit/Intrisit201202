@@ -1,0 +1,3 @@
+
+cp -f mplayer.a libvo/libvo.a libao2/libao2.a input/libinput.a   libmpcodecs/libmpcodecs.a libmpcodecs/libmpcodecs_p.a libaf/libaf.a libmpdemux/libmpdemux.a stream/stream.a libswscale/libswscale.a libvo/libosd.a plugin/libmplugin.a  libavformat/libavformat.a libavcodec/libavcodec.a libavcodec/libavcodec_p.a libavutil/libavutil.a libpostproc/libpostproc.a liba52/liba52.a libmpeg2/libmpeg2.a jzcodecs/JZ4755/libh264/libh264dec.a jzcodecs/JZ4755/libvc1/libvc1dec.a jzcodecs/JZ4755/libxvid.113/libxvidcore.a libmpeg2_jz4740/libmpeg2.a libfaad2/libfaad2.a tremor/libvorbisidec.a osdep/libosdep.a madlib/libmad.a amr/spc.a amr/fipop.a jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a ./LIBS/
+

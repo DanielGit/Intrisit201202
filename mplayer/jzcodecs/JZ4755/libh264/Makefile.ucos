@@ -1,0 +1,74 @@
+#include config.mak
+include ../../../configure.mak
+include ../../../config.mak
+SRCS_DIR = .
+REL_DIR =./rel
+SRC_PATH = ../../../
+
+JZC_H264_MACRO	= h264_macro.h
+MINI_OS_DIR = ~/minios/mtv_50
+
+CFLAGS += -DMINIOS -D_UCOS_ -imacros $(JZC_H264_MACRO) -mlong-calls -I$(SRC_PATH)/libswscale -I$(SRC_PATH)/libavcodec  \
+          -I$(SRC_PATH)/uc_inc -I$(SRC_PATH)/Include -I$(SRC_PATH)/Include/libc -I$(SRC_PATH)/Include/libm             \
+          -I$(SRC_PATH)/libh264/jzsoc
+
+#SRCS_VD_H264 = $(SRCS_DIR)/h264.c $(SRCS_DIR)/h264pred.c $(SRCS_DIR)/svq3.c $(SRCS_DIR)/h264dsputil.c
+SRCS_VD_H264 = $(SRCS_DIR)/h264.c $(SRCS_DIR)/h264pred.c $(SRCS_DIR)/h264dsputil.c
+
+OBJS_VD_H264 = $(addsuffix .o, $(basename $(SRCS_VD_H264)) )
+
+OBJS = $(OBJS_VD_H264)
+
+EXTRALIBS := -L$(BUILD_ROOT)/libavutil -lavutil$(BUILDSUF) $(EXTRALIBS)
+
+NAME=h264dec
+LIBVERSION=$(LAVCVERSION)
+LIBMAJOR=$(LAVCMAJOR)
+
+
+STATIC_OBJS := $(OBJS)
+VPATH = $(SRC_PATH_BARE)/lib$(NAME)
+
+MIDS_VD_H264 = $(OBJS_VD_H264:.o=.s)
+ASMS_VD_H264 = $(OBJS_VD_H264:.o=.mid)
+
+
+CFLAGS += -DHAVE_AV_CONFIG_H -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE \
+          -D_ISOC9X_SOURCE -I$(BUILD_ROOT) -I$(SRC_PATH) \
+          -I$(SRC_PATH)/libavutil $(OPTFLAGS)
+
+
+EXT_BIN_DIR := ./jzsoc/jzh264/
+EXT_BIN_NAME := h264_aux_task.bin
+
+EXT_BIN = $(join $(EXT_BIN_DIR),$(EXT_BIN_NAME))
+
+
+all: $(REL_DIR) $(LIB) Makefile #$(EXT_BIN)
+	#@test -d $(REL_DIR)
+	#@cp $(EXT_BIN) $(REL_DIR) -f
+	cp $(LIB) $(REL_DIR)
+
+$(LIB): $(STATIC_OBJS)
+	rm -f $@
+	$(AR) rc $@ $^ 
+	$(RANLIB) $@
+
+$(EXT_BIN):
+	@for d in $(EXT_BIN_DIR);do make -C $$d;done
+
+$(REL_DIR):
+	test -d $(REL_DIR) || mkdir $(REL_DIR)
+$(OBJS_VD_H264):%.o:%.s
+	$(CC) $(CFLAGS) -c -o $@ $<
+$(MIDS_VD_H264):%.s:%.mid
+	mxu_as $< > $@
+$(ASMS_VD_H264):%.mid:%.c
+	$(CC) $(CFLAGS) -S -o $@ $<
+
+distclean::
+clean::
+	rm -f *.o *~ *.a *.lib *.so *.so.* *.dylib *.dll *.s *.mid\
+	      *.def *.dll.a *.exp
+	rm -fr $(REL_DIR)
+	@for d in $(EXT_BIN_DIR);do make -C $$d  clean;done

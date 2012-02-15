@@ -1,0 +1,8 @@
+
+
+tar cfj ../librmvb-dec-yyyymmdd.tar.bz2 `find . -name librv89.a`
+rm -frv nda
+find . -name ".svn*" | xargs rm -frv
+find . -name "librv89.a" | xargs rm -frv
+rm -frv do_release
+

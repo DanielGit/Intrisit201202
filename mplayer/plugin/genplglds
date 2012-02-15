@@ -1,0 +1,20 @@
+
+  cat $2 |  grep "undefined reference" | grep -v "more undefined reference" \
+         | gawk '{print $NF}' | sed -e 's:^`::' -e "s:'$::"  | sort | uniq  > undsym.dump
+
+  mipsel-linux-objdump -t $1 | gawk 'BEGIN { while ((getline < "undsym.dump") > 0) sym[$1]=1 } \
+  {
+    if (($2 ~ /g/) && (NF == 6 || NF == 5))
+    {
+       symcnt[$NF]++;
+       symaddr[$NF] = $1;
+    }
+  } \
+  END {
+    for (i in symaddr)
+    {
+      if (symcnt[i] == 1)
+        printf "%s = 0x%s;\n", i, symaddr[i];
+    }
+  }'
+

@@ -1,0 +1,31 @@
+typedef void (*PFUN_StartPlay)(void);
+
+void startplay(void)
+{
+	InitStartPlay = 1;
+	
+	...
+	
+}
+void InitMplay()
+{
+   InitStartPlay = 0;
+   SetStartPlay(startplay); 
+}
+void SetStartPlay(PFUN_StartPlay pfun); 
+
+
+void SetExitPlay(PFUN_StartPlay pfun);
+
+
+
+mplayer_showmode(int t); /*0 = initsize 1 = EQSIZE; 2 = FULLSCREEN */
+
+
+void SetPauseState(unsigned int value);
+int GetTotalTime();
+void SetSeekTime(int f);
+void SetMPlayerQuit( void );
+int GerCurAudioTime();
+
+

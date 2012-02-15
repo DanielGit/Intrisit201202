@@ -1,0 +1,4 @@
+
+scp src/libxvidcore.a zpxu@192.168.1.23:/home/zpxu/work/merge/090713/mplayer-1.0rc2/jzsoc/linux/LIBS/JZ4755/
+scp xvid_aux_task.bin zpxu@192.168.1.23:/home/zpxu/work/merge/090713/mplayer-1.0rc2/jzsoc/linux/codecs
+

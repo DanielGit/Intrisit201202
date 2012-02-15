@@ -1,0 +1,188 @@
+OUTPUT_ARCH(mips)
+ENTRY(BootEntry)
+MEMORY
+{
+    ram (wx) : ORIGIN = 0x80000000, LENGTH = 64M
+}
+
+SECTIONS
+{
+	/**** Code and read-only data ****/
+	.text :
+	{
+		_ftext = ABSOLUTE(.) ;	/* Start of code and read-only data	*/
+	    *(.text*)
+	    *(.gnu.linkonce.*)
+	    *(__libc*)
+	    *(.rel.dyn)
+		_ecode = ABSOLUTE(.) ;	/* End of code				*/
+		
+		*(.rodata*)
+		
+		. = ALIGN(8);
+		_etext = ABSOLUTE(.);	/* End of code and read-only data	*/
+	} > ram
+	
+	.mdata :
+	{
+		_start_mplayer_data = ABSOLUTE(.);
+		../../UsrLib/libout/JZ4750/mplayer.a:(.data)
+		../../UsrLib/libout/JZ4750/libvo.a:(.data)
+		../../UsrLib/libout/JZ4750/libao2.a:(.data)
+		../../UsrLib/libout/JZ4750/libinput.a:(.data)
+		../../UsrLib/libout/JZ4750/libmpcodecs.a:(.data)
+		../../UsrLib/libout/JZ4750/libaf.a:(.data)
+		../../UsrLib/libout/JZ4750/libmpdemux.a:(.data)
+		../../UsrLib/libout/JZ4750/stream.a:(.data)
+		../../UsrLib/libout/JZ4750/libswscale.a:(.data)
+		../../UsrLib/libout/JZ4750/libosd.a:(.data)
+		../../UsrLib/libout/JZ4750/libavformat.a:(.data)
+		../../UsrLib/libout/JZ4750/libavcodec.a:(.data)
+		../../UsrLib/libout/JZ4750/libavutil.a:(.data)
+		../../UsrLib/libout/JZ4750/libpostproc.a:(.data)
+		../../UsrLib/libout/JZ4750/liba52.a:(.data)
+		../../UsrLib/libout/JZ4750/libmpeg2.a:(.data)
+		../../UsrLib/libout/JZ4750/libfaad2.a:(.data)
+		../../UsrLib/libout/JZ4750/libvorbisidec.a:(.data)
+		../../UsrLib/libout/JZ4750/libosdep.a:(.data)
+		../../UsrLib/libout/JZ4750/libmad.a:(.data)
+		../../UsrLib/libout/JZ4750/spc.a:(.data)
+		../../UsrLib/libout/JZ4750/fipop.a:(.data)
+		../../UsrLib/libout/JZ4750/av_sync.a:(.data)
+		_end_mplayer_data = ABSOLUTE(.);
+	} > ram
+	
+	/**** Initialised data ****/
+	.data :
+	{
+		_fdata = ABSOLUTE(.);	/* Start of initialised data		*/
+		*(.data*)
+		*(.eh_frame*)
+		*(.gcc_except_table*)
+		
+		. = ALIGN(8);
+		__START_ctros = ABSOLUTE(.);
+		KEEP(*(SORT(.ctors*)))
+		__END_ctros = ABSOLUTE(.);
+		__START_dtros = ABSOLUTE(.);
+		KEEP(*(SORT(.dtors*)))
+		__END_dtros = ABSOLUTE(.);
+		
+		_gp = ABSOLUTE(. + 0x7ff0); /* Base of small data			*/
+		
+		*(.lit8) 
+		*(.lit4) 
+		*(.sdata) 
+		
+		. = ALIGN(8);
+		
+		_edata  = ABSOLUTE(.);	/* End of initialised data		*/
+	} > ram
+
+	.plugin :
+	{
+	    . = ALIGN(4096);
+		*(.video_codec_sect*)
+		. = ALIGN(4096);
+		*(.audio_codec_sect*)		
+		
+	}
+
+	/**** Uninitialised data ****/
+	_start_bss = .;			/* Start of uninitialised data		*/
+
+	.msbss :
+	{
+		_start_mplayer_sbss = ABSOLUTE(.);
+		../../UsrLib/libout/JZ4750/mplayer.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libvo.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libao2.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libinput.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libmpcodecs.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libaf.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libmpdemux.a:(.sbss)
+		../../UsrLib/libout/JZ4750/stream.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libswscale.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libosd.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libavformat.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libavcodec.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libavutil.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libpostproc.a:(.sbss)
+		../../UsrLib/libout/JZ4750/liba52.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libmpeg2.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libfaad2.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libvorbisidec.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libosdep.a:(.sbss)
+		../../UsrLib/libout/JZ4750/libmad.a:(.sbss)
+		../../UsrLib/libout/JZ4750/spc.a:(.sbss)
+		../../UsrLib/libout/JZ4750/fipop.a:(.sbss)
+		../../UsrLib/libout/JZ4750/av_sync.a:(.sbss)
+		_end_mplayer_sbss = ABSOLUTE(.);
+	}
+
+	.sbss : 
+	{ 
+		*(.sbss) 
+		*(.scommon)
+	}
+
+	.mbss :
+	{
+		_start_mplayer_bss = ABSOLUTE(.);
+		../../UsrLib/libout/JZ4750/mplayer.a:(.bss)
+		../../UsrLib/libout/JZ4750/libvo.a:(.bss)
+		../../UsrLib/libout/JZ4750/libao2.a:(.bss)
+		../../UsrLib/libout/JZ4750/libinput.a:(.bss)
+		../../UsrLib/libout/JZ4750/libmpcodecs.a:(.bss)
+		../../UsrLib/libout/JZ4750/libaf.a:(.bss)
+		../../UsrLib/libout/JZ4750/libmpdemux.a:(.bss)
+		../../UsrLib/libout/JZ4750/stream.a:(.bss)
+		../../UsrLib/libout/JZ4750/libswscale.a:(.bss)
+		../../UsrLib/libout/JZ4750/libosd.a:(.bss)
+		../../UsrLib/libout/JZ4750/libavformat.a:(.bss)
+		../../UsrLib/libout/JZ4750/libavcodec.a:(.bss)
+		../../UsrLib/libout/JZ4750/libavutil.a:(.bss)
+		../../UsrLib/libout/JZ4750/libpostproc.a:(.bss)
+		../../UsrLib/libout/JZ4750/liba52.a:(.bss)
+		../../UsrLib/libout/JZ4750/libmpeg2.a:(.bss)
+		../../UsrLib/libout/JZ4750/libfaad2.a:(.bss)
+		../../UsrLib/libout/JZ4750/libvorbisidec.a:(.bss)
+		../../UsrLib/libout/JZ4750/libosdep.a:(.bss)
+		../../UsrLib/libout/JZ4750/libmad.a:(.bss)
+		../../UsrLib/libout/JZ4750/spc.a:(.bss)
+		../../UsrLib/libout/JZ4750/fipop.a:(.bss)
+		../../UsrLib/libout/JZ4750/av_sync.a:(.bss)
+		_end_mplayer_bss = ABSOLUTE(.);
+	}
+	
+	.bss :
+	{
+		*(.bss)
+		*(COMMON)
+		. = ALIGN(8) ;
+		_freemem = .;
+	}
+	_end_bss = . ;			/* End of unitialised data		*/
+
+	.gptab.sdata : 
+	{ 
+		*(.gptab.data)
+		*(.gptab.sdata) 
+	}
+	.gptab.sbss : 
+	{ 
+		*(.gptab.bss)
+		*(.gptab.sbss)
+	}
+	
+	/DISCARD/ :
+	{
+		*(.reginfo)
+	}
+	
+	PROVIDE(etext = _etext);
+	PROVIDE (edata = .);
+	PROVIDE (end = .);
+}
+
+

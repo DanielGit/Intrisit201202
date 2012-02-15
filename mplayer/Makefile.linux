@@ -1,0 +1,572 @@
+# LINUX Makefile made by A'rpi / Astral
+# Some cleanup by LGB: 	* 'make -C dir' instead of 'cd dir;make;cd..'
+#			* for loops instead of linear sequence of make directories
+#			* some minor problems with make clean and distclean were corrected
+#			* DVD support
+
+include configure.mak
+include config.mak
+
+COMMON_LDFLAGS += $(EXTRA_LIB)\
+                  $(EXTRALIBS) \
+
+LDFLAGS_MPLAYER = $(EXTRALIBS_MPLAYER) \
+                  $(COMMON_LDFLAGS) \
+
+LDFLAGS_MENCODER = $(EXTRALIBS_MENCODER) \
+                   $(COMMON_LDFLAGS) \
+
+SRCS_COMMON = asxparser.c \
+              codec-cfg.c \
+              cpudetect.c \
+              edl.c \
+              find_sub.c \
+              get_path.c \
+              m_config.c \
+              m_option.c \
+              m_struct.c \
+              mpcommon.c \
+              parser-cfg.c \
+              playtree.c \
+              playtreeparser.c \
+              spudec.c \
+              sub_cc.c \
+              subreader.c \
+              vobsub.c 
+
+SCALE_DEVICE = mplayer_aux.c jzsoc/linux/jz47_soc.c jzsoc/linux/jz47_soc_mem.c jzsoc/linux/jz47_soc_rsize.c
+
+SRCS_COMMON += $(SCALE_DEVICE)
+
+
+SRCS_COMMON-$(UNRARLIB) += unrarlib.c
+
+SRCS_MPLAYER = jzsoc/linux/mplayer.c \
+               m_property.c \
+               mp_fifo.c \
+               mp_msg.c \
+               mixer.c \
+               parser-mpcmd.c \
+               subopt-helper.c \
+               command.c \
+
+SRCS_MENCODER = mencoder.c \
+                mp_msg-mencoder.c \
+                parser-mecmd.c \
+                xvid_vbr.c \
+
+COMMON_LIBS = libmpcodecs/libmpcodecs.a \
+              libaf/libaf.a \
+              libmpdemux/libmpdemux.a \
+              stream/stream.a \
+              libswscale/libswscale.a \
+              libvo/libosd.a  \
+              madlib/libmad.a 
+
+COMMON_LIBS-$(LIBAVFORMAT_A)      += libavformat/libavformat.a
+COMMON_LIBS-$(LIBAVCODEC_A)       += libavcodec/libavcodec.a
+COMMON_LIBS-$(LIBAVUTIL_A)        += libavutil/libavutil.a
+COMMON_LIBS-$(LIBPOSTPROC_A)      += libpostproc/libpostproc.a
+COMMON_LIBS-$(WIN32DLL)           += loader/libloader.a
+COMMON_LIBS-$(MP3LIB)             += mp3lib/libmp3.a
+COMMON_LIBS-$(LIBA52)             += liba52/liba52.a
+ifeq ($(JZ4755_BSP),1)
+COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4755/libh264/libh264dec.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4755/libvc1/libvc1dec.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4755/libxvid.113/src/libxvidcore.a
+else ifeq ($(JZ4750_BSP),1)
+COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4750/libxvid/src/libxvidcore.a
+else
+COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
+endif
+COMMON_LIBS-$(FAAD_INTERNAL)      += libfaad2/libfaad2.a
+COMMON_LIBS-$(TREMOR_INTERNAL)    += tremor/libvorbisidec.a
+COMMON_LIBS-$(DVDREAD_INTERNAL)   += dvdread/libdvdread.a
+COMMON_LIBS-$(DVDCSS_INTERNAL)    += libdvdcss/libdvdcss.a
+COMMON_LIBS-$(ASS)                += libass/libass.a
+
+LIBS_MPLAYER = libvo/libvo.a \
+               libao2/libao2.a \
+               input/libinput.a \
+
+LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a
+LIBS_MPLAYER-$(GUI)               += gui/libgui.a
+LIBS_MPLAYER-$(LIBMENU)           += libmenu/libmenu.a
+
+LIBS_MENCODER = libmpcodecs/libmpencoders.a \
+                libmpdemux/libmpmux.a \
+
+# Having this in libosdep.a is not enough.
+OBJS_MPLAYER-$(TARGET_WIN32) += osdep/mplayer-rc.o
+
+ALL_PRG-$(MPLAYER)  += mplayer$(EXESUF)
+ALL_PRG-$(MENCODER) += mencoder$(EXESUF)
+
+COMMON_LIBS  += $(COMMON_LIBS-yes)
+LIBS_MPLAYER += $(LIBS_MPLAYER-yes)
+OBJS_MPLAYER += $(OBJS_MPLAYER-yes)
+PARTS        += $(PARTS-yes)
+ALL_PRG      += $(ALL_PRG-yes)
+
+COMMON_LIBS += osdep/libosdep.a
+COMMON_LIBS += amr/spc.a amr/fipop.a
+
+ifeq ($(JZ4740_BSP),1)
+COMMON_LIBS += $(wildcard jzsoc/linux/LIBS/JZ4740/*.a)
+endif
+
+ifeq ($(JZ4750_BSP),1)
+COMMON_LIBS += $(wildcard jzsoc/linux/LIBS/JZ4750/*.a)
+endif
+
+ifeq ($(JZ4740_BSP),1)
+COMMON_LIBS += $(wildcard jzsoc/linux/LIBS/JZ4740/*.a)
+endif
+
+ifeq ($(JZ4755_BSP),1)
+COMMON_LIBS += $(wildcard jzsoc/linux/LIBS/JZ4755/*.a)
+endif
+
+ifeq ($(JZ4760_BSP),1)
+COMMON_LIBS += $(wildcard jzsoc/linux/LIBS/JZ4740/*.a)
+endif
+
+MPLAYER_DEPS  = $(OBJS_MPLAYER)  $(OBJS_COMMON) $(LIBS_MPLAYER)  $(COMMON_LIBS)
+MENCODER_DEPS = $(OBJS_MENCODER) $(OBJS_COMMON) $(LIBS_MENCODER) $(COMMON_LIBS)
+
+INSTALL_TARGETS-$(MPLAYER)  += install-mplayer  install-mplayer-man
+INSTALL_TARGETS-$(MENCODER) += install-mencoder install-mplayer-man
+INSTALL_TARGETS-$(GUI)      += install-gui
+INSTALL_TARGETS             += $(INSTALL_TARGETS-yes)
+
+PARTS = dvdread \
+        gui \
+        input \
+        liba52 \
+        libaf \
+        libao2 \
+        libass \
+        libavcodec \
+        libavformat \
+        libavutil \
+        libdvdcss \
+        libfaad2 \
+        libmenu \
+        libmpcodecs \
+        libmpdemux \
+        libmpeg2 \
+        libmpeg2_jz4740 \
+        libpostproc \
+        libswscale \
+        libvo \
+        loader \
+        mp3lib \
+        osdep \
+        stream \
+        tremor \
+        vidix \
+        madlib \
+        amr    \
+	jzcodecs/JZ4755/libh264 \
+	jzcodecs/JZ4755/libvc1  \
+	jzcodecs/JZ4755/libxvid.113  \
+	jzcodecs/JZ4750/libxvid
+
+
+
+all:	test_plat help_mp.h version.h codecs.conf.h $(ALL_PRG)
+
+test_plat:
+ifeq ($($(JZ4760_BSP) + $(JZ4755_BSP) + $(JZ4750_BSP) + $(JZ4740_BSP) + $(JZ4725_BSP)), 0)
+	@echo "++++ you must define MACRO 'JZ4725B_BSP', 'JZ4740_BSP', 'JZ4750_BSP', 'JZ4755_BSP' or 'JZ4760_BSP' as 1 +++++"
+	@exit 1
+else
+	@echo ""
+endif
+
+ifeq ($(JZ4755_BSP),1)
+mplayer_aux.c: jzsoc/linux/codecs/xvid_aux_task.bin jzsoc/linux/codecs/h264_aux_task.bin jzsoc/linux/codecs/vc1_aux_task.bin  \
+	       jzsoc/linux/codecs/aux_task.bin
+#real aux
+	/bin/echo -e "unsigned int real_aux_task_codes[] = {\n" > mplayer_aux.c
+	od -v -t x4 jzsoc/linux/codecs/aux_task.bin | gawk '{for (i = 2; i <= NF; i++) printf "0x" $$i ", "; printf "\n"}'  >> mplayer_aux.c
+	/bin/echo -e "};\n unsigned int real_auxcodes_len = sizeof(real_aux_task_codes);\n" >> mplayer_aux.c
+#xvid aux
+	/bin/echo -e "unsigned int xvid_aux_task_codes[] = {\n" >> mplayer_aux.c
+	od -v -t x4 jzsoc/linux/codecs/xvid_aux_task.bin | gawk '{for (i = 2; i <= NF; i++) printf "0x" $$i ", "; printf "\n"}'  >> mplayer_aux.c
+	/bin/echo -e "};\n unsigned int xvid_auxcodes_len = sizeof(xvid_aux_task_codes);\n" >> mplayer_aux.c
+#h264 aux
+	/bin/echo -e "unsigned int h264_aux_task_codes[] = {\n" >> mplayer_aux.c
+	od -v -t x4 jzsoc/linux/codecs/h264_aux_task.bin | gawk '{for (i = 2; i <= NF; i++) printf "0x" $$i ", "; printf "\n"}'  >> mplayer_aux.c
+	/bin/echo -e "};\n unsigned int h264_auxcodes_len = sizeof(h264_aux_task_codes);\n" >> mplayer_aux.c
+#h264 tcsm0 bin
+	/bin/echo -e "unsigned int h264_cabac_tcsm0_text[0x1000] = {1,2,3,4,5,6,7,8}; \n" >> mplayer_aux.c
+	/bin/echo -e "unsigned int h264_cabac_tcsm0_size = 16; \n" >> mplayer_aux.c
+	/bin/echo -e "unsigned int h264_cavlc_tcsm0_text[0x1000] = {1,2,3,4,5,6,7,8}; \n" >> mplayer_aux.c
+	/bin/echo -e "unsigned int h264_cavlc_tcsm0_size = 16; \n" >> mplayer_aux.c
+#vc1 aux
+	/bin/echo -e "unsigned int vc1_aux_task_codes[] = {\n" >> mplayer_aux.c
+	od -v -t x4 jzsoc/linux/codecs/vc1_aux_task.bin | gawk '{for (i = 2; i <= NF; i++) printf "0x" $$i ", "; printf "\n"}'  >> mplayer_aux.c
+	/bin/echo -e "};\n unsigned int vc1_auxcodes_len = sizeof(vc1_aux_task_codes);\n" >> mplayer_aux.c
+#vc1 tcsm0 bin
+	/bin/echo -e "unsigned int vc1_J1_tcsm0_text[0x1000] = {1,2,3,4,5,6,7,8}; \n" >> mplayer_aux.c
+	/bin/echo -e "unsigned int vc1_J1_tcsm0_size = 16; \n" >> mplayer_aux.c
+#real tcsm0 bin
+	/bin/echo -e "unsigned int real_tcsm0_bank23[0x1000] = {1,2,3,4,5,6,7,8}; \n" >> mplayer_aux.c
+	/bin/echo -e "unsigned int real_tcsm0_size = 16; \n" >> mplayer_aux.c
+
+endif
+ifeq ($(JZ4750_BSP),1)
+mplayer_aux.c:  Makefile.linux
+#real tcsm bin
+	/bin/echo -e "unsigned int real_tcsm_text[0x1000] = {1,2,3,4,5,6,7,8}; \n" > mplayer_aux.c
+	/bin/echo -e "unsigned int real_tcsm_size = 16; \n" >> mplayer_aux.c
+endif
+
+ifeq ($(JZ4740_BSP),1)
+mplayer_aux.c:  Makefile.linux
+#fake for JZ4740
+	/bin/echo -e "static unsigned int real_tcsm_size = 16; \n" > mplayer_aux.c
+endif
+
+ifeq ($(JZ4760_BSP),1)
+mplayer_aux.c:  Makefile.linux
+#fake for JZ4760
+	/bin/echo -e "static unsigned int real_tcsm_size = 16; \n" > mplayer_aux.c
+endif
+
+dep depend:: help_mp.h version.h codecs.conf.h
+	@for a in $(PARTS); do $(MAKE) -C $$a dep; done
+
+include mpcommon.mak
+
+CFLAGS := $(subst -I..,-I.,$(CFLAGS))
+
+libaf/libaf.a:
+	$(MAKE) -C libaf
+
+dvdread/libdvdread.a:
+	$(MAKE) -C dvdread
+
+libdvdcss/libdvdcss.a:
+	$(MAKE) -C libdvdcss
+
+loader/libloader.a:
+	$(MAKE) -C loader
+
+libass/libass.a:
+	$(MAKE) -C libass
+
+libmpdemux/libmpdemux.a:
+	$(MAKE) -C libmpdemux libmpdemux.a
+
+libmpdemux/libmpmux.a:
+	$(MAKE) -C libmpdemux libmpmux.a
+
+stream/stream.a:
+	$(MAKE) -C stream
+
+libmpcodecs/libmpcodecs.a:
+	$(MAKE) -C libmpcodecs
+
+libavutil/libavutil.a:
+	$(MAKE) -C libavutil
+
+libavcodec/libavcodec.a:
+	$(MAKE) -C libavcodec
+
+libpostproc/libpostproc.a:
+	$(MAKE) -C libpostproc
+
+libavformat/libavformat.a:
+	$(MAKE) -C libavformat
+
+libswscale/libswscale.a:
+	$(MAKE) -C libswscale
+
+libmpeg2/libmpeg2.a:
+	$(MAKE) -C libmpeg2
+
+libmpeg2_jz4740/libmpeg2.a:
+	$(MAKE) -C libmpeg2_jz4740
+
+libvo/libvo.a:
+	$(MAKE) -C libvo libvo.a
+
+libvo/libosd.a:
+	$(MAKE) -C libvo libosd.a
+
+libao2/libao2.a:
+	$(MAKE) -C libao2
+
+liba52/liba52.a:
+	$(MAKE) -C liba52
+
+libfaad2/libfaad2.a:
+	$(MAKE) -C libfaad2
+
+mp3lib/libmp3.a:
+	$(MAKE) -C mp3lib
+
+tremor/libvorbisidec.a:
+	$(MAKE) -C tremor
+
+vidix/libvidix.a:
+	$(MAKE) -C vidix
+
+gui/libgui.a:
+	$(MAKE) -C gui
+
+osdep/libosdep.a:
+	$(MAKE) -C osdep
+
+madlib/libmad.a:
+	$(MAKE) -C madlib
+
+amr/spc.a:
+	$(MAKE) -C amr spclib
+
+amr/fipop.a:
+	$(MAKE) -C amr fipoplib
+
+osdep/mplayer-rc.o: version.h
+	$(MAKE) -C osdep mplayer-rc.o
+
+input/libinput.a:
+	$(MAKE) -C input
+
+libmenu/libmenu.a:
+	$(MAKE) -C libmenu
+
+jzcodecs/JZ4755/libh264/libh264dec.a:
+	$(MAKE) -C jzcodecs/JZ4755/libh264
+
+jzcodecs/JZ4755/libvc1/libvc1dec.a:
+	$(MAKE) -C jzcodecs/JZ4755/libvc1
+
+jzcodecs/JZ4755/libxvid.113/src/libxvidcore.a:
+	$(MAKE) -C jzcodecs/JZ4755/libxvid.113
+
+jzcodecs/JZ4750/libxvid/src/libxvidcore.a:
+	$(MAKE) -C jzcodecs/JZ4750/libxvid
+
+ifeq ($(JZ4755_BSP),1)
+mplayer$(EXESUF): $(MPLAYER_DEPS) $(MPLAYER_AUXBIN)
+	$(CC) -Xlinker -T -Xlinker linux_jz4755.ld -o $@ $^ libavcodec/libavcodec.a $(LDFLAGS_MPLAYER) jzsoc/linux/LIBS/librv89_fake.a
+	mipsel-linux-objcopy --only-section .h264_cavlc_tcsm_text -O binary $@ h264_cavlc_tcsm0_text.bin
+	mipsel-linux-objcopy --only-section .h264_cabac_tcsm_text -O binary $@ h264_cabac_tcsm0_text.bin
+	mipsel-linux-objcopy --only-section .vc1_J1_tcsm_text -O binary $@ vc1_J1_tcsm0_text.bin
+	mipsel-linux-objcopy --only-section .real_tcsm0_bank2.3 -O binary $@ real_tcsm0_bank23.bin
+	mipsel-linux-objcopy --remove-section .h264_cabac_tcsm_text --remove-section .h264_cavlc_tcsm_text \
+	                     --remove-section .vc1_J1_tcsm_text --remove-section  .real_tcsm0_bank2.3      \
+	                     -O elf32-tradlittlemips $@ $@
+# fix h264 decoder symbol
+	@$(HOST_CC) -O2 fixelf.c -o fixelf
+	@./fixelf $@ h264_cavlc_tcsm0_size `wc -c h264_cavlc_tcsm0_text.bin | awk '{print $$1}'`
+	@./fixelf $@ h264_cabac_tcsm0_size `wc -c h264_cabac_tcsm0_text.bin | awk '{print $$1}'`
+	@./fixelf $@ h264_cavlc_tcsm0_text 0 h264_cavlc_tcsm0_text.bin
+	@./fixelf $@ h264_cabac_tcsm0_text 0 h264_cabac_tcsm0_text.bin
+# fix wma decoder symbol
+	@./fixelf $@ vc1_J1_tcsm0_size `wc -c vc1_J1_tcsm0_text.bin | awk '{print $$1}'`
+	@./fixelf $@ vc1_J1_tcsm0_text 0 vc1_J1_tcsm0_text.bin
+# fix real decoder symbol
+	@./fixelf $@ real_tcsm0_size `wc -c real_tcsm0_bank23.bin | awk '{print $$1}'`
+	@./fixelf $@ real_tcsm0_bank23 0 real_tcsm0_bank23.bin
+else
+ifeq ($(JZ4750_BSP),1)
+mplayer$(EXESUF): $(MPLAYER_DEPS) $(MPLAYER_AUXBIN)
+	$(CC) -Xlinker -T -Xlinker linux_real.ld -o $@ $^ $(LDFLAGS_MPLAYER) jzsoc/linux/LIBS/librv89_fake.a
+	mipsel-linux-objcopy --only-section .real_tcsm_text -O binary $@ real_tcsm_text.bin
+	mipsel-linux-objcopy --remove-section .real_tcsm_text -O elf32-tradlittlemips $@ $@
+# fix real decoder symbol
+	@$(HOST_CC) -O2 fixelf.c -o fixelf
+	@./fixelf $@ real_tcsm_size `wc -c real_tcsm_text.bin | awk '{print $$1}'`
+	@./fixelf $@ real_tcsm_text 0 real_tcsm_text.bin
+else
+mplayer$(EXESUF): $(MPLAYER_DEPS) $(MPLAYER_AUXBIN) 
+	$(CC) -o $@ $^ $(LDFLAGS_MPLAYER) jzsoc/linux/LIBS/librv89_fake.a
+endif
+
+endif
+
+mencoder$(EXESUF): $(MENCODER_DEPS)
+	$(CC) -o $@ $^ libavcodec/libavcodec.a $(LDFLAGS_MENCODER) jzsoc/linux/LIBS/librv89_fake.a
+
+codec-cfg$(EXESUF): codec-cfg.c help_mp.h
+	$(HOST_CC) -D__LINUX__ -I. -DCODECS2HTML $< -o $@
+
+codecs.conf.h: codec-cfg$(EXESUF) etc/codecs.conf
+	./codec-cfg$(EXESUF) ./etc/codecs.conf > $@
+
+codec-cfg.mid: codecs.conf.h
+codec-cfg.o: codecs.conf.h
+
+codecs2html$(EXESUF): mp_msg.o
+	$(CC) -DCODECS2HTML codec-cfg.c $^ -o $@
+
+codec-cfg-test$(EXESUF): codecs.conf.h codec-cfg.h mp_msg.o osdep/getch2.o
+	$(CC) -I. -DTESTING codec-cfg.c mp_msg.o osdep/getch2.o -ltermcap -o $@
+
+install: install-dirs $(INSTALL_TARGETS)
+
+install-dirs:
+	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) -d $(DATADIR)
+	$(INSTALL) -d $(MANDIR)/man1
+	$(INSTALL) -d $(CONFDIR)
+	if test -f $(CONFDIR)/codecs.conf ; then mv -f $(CONFDIR)/codecs.conf $(CONFDIR)/codecs.conf.old ; fi
+
+install-mplayer: mplayer$(EXESUF)
+	$(INSTALL) -m 755 $(INSTALLSTRIP) mplayer$(EXESUF) $(BINDIR)
+
+install-mplayer-man:
+	for i in $(MAN_LANG); do \
+		if test "$$i" = en ; then \
+			$(INSTALL) -c -m 644 DOCS/man/en/mplayer.1 $(MANDIR)/man1/ ; \
+		else \
+			$(INSTALL) -d $(MANDIR)/$$i/man1 ; \
+			$(INSTALL) -c -m 644 DOCS/man/$$i/mplayer.1 $(MANDIR)/$$i/man1/ ; \
+		fi ; \
+	done
+
+install-mencoder: mencoder$(EXESUF)
+	$(INSTALL) -m 755 $(INSTALLSTRIP) mencoder$(EXESUF) $(BINDIR)
+	for i in $(MAN_LANG); do \
+		if test "$$i" = en ; then \
+			cd $(MANDIR)/man1 && ln -sf mplayer.1 mencoder.1 ; \
+		else \
+			cd $(MANDIR)/$$i/man1 && ln -sf mplayer.1 mencoder.1 ; \
+		fi ; \
+	done
+
+install-gui:
+	-ln -sf mplayer$(EXESUF) $(BINDIR)/gmplayer$(EXESUF)
+	$(INSTALL) -d $(DATADIR)/skins
+	@echo "*** Download skin(s) at http://www.mplayerhq.hu/design7/dload.html"
+	@echo "*** for GUI, and extract to $(DATADIR)/skins/"
+	$(INSTALL) -d $(prefix)/share/pixmaps
+	$(INSTALL) -m 644 etc/mplayer.xpm $(prefix)/share/pixmaps/
+	$(INSTALL) -d $(prefix)/share/applications
+	$(INSTALL) -m 644 etc/mplayer.desktop $(prefix)/share/applications/
+
+uninstall:
+	-rm -f $(BINDIR)/mplayer$(EXESUF) $(BINDIR)/gmplayer$(EXESUF)
+	-rm -f $(BINDIR)/mencoder$(EXESUF)
+	-rm -f $(MANDIR)/man1/mencoder.1 $(MANDIR)/man1/mplayer.1
+	-rm -f $(prefix)/share/pixmaps/mplayer.xpm
+	-rm -f $(prefix)/share/applications/mplayer.desktop
+	for l in $(MAN_LANG); do \
+	  if test "$$l" != "en"; then \
+	    rm -f $(MANDIR)/$$l/man1/mplayer.1    \
+	          $(MANDIR)/$$l/man1/mencoder.1   \
+	          $(MANDIR)/$$l/man1/gmplayer.1 ; \
+	  fi ; \
+	done
+
+clean::
+	-rm -f mplayer$(EXESUF) mencoder$(EXESUF) codec-cfg$(EXESUF) \
+	  codecs2html$(EXESUF) codec-cfg-test$(EXESUF) cpuinfo$(EXESUF) mplayer_aux.c
+	@for a in $(PARTS); do $(MAKE) -C $$a clean; done
+
+distclean:: doxygen_clean
+	@for a in $(PARTS); do $(MAKE) -C $$a distclean; done
+	$(MAKE) -C TOOLS distclean
+	-rm -f configure.log mplayer_aux.c *.bin fixelf
+
+strip:
+	strip -s $(ALL_PRG)
+
+# ./configure must be rerun if it changed
+config.mak: configure
+	@echo "############################################################"
+	@echo "####### Please run ./configure again - it's changed! #######"
+	@echo "############################################################"
+
+# rebuild at every config.h/config.mak/Makefile change:
+version.h: config.h config.mak Makefile
+	./version.sh `$(CC) -dumpversion`
+
+doxygen:
+	doxygen DOCS/tech/Doxyfile
+
+doxygen_clean:
+	-rm -rf DOCS/tech/doxygen
+
+help_mp.h: help/help_mp-en.h $(HELP_FILE)
+	echo '// WARNING! This is a generated file. Do NOT edit.' > help_mp.h
+	echo '// See the help/ subdir for the editable files.' >> help_mp.h
+ifeq ($(CHARSET),)
+	echo '#include "$(HELP_FILE)"' >> help_mp.h
+else
+	iconv -f UTF-8 -t $(CHARSET) "$(HELP_FILE)" >> help_mp.h
+endif
+
+ifneq ($(HELP_FILE),help/help_mp-en.h)
+	echo "Adding untranslated messages to help_mp.h"
+	echo '// untranslated messages from the English master file:' >> help_mp.h
+	help/help_diff.sh $(HELP_FILE) < help/help_mp-en.h >> help_mp.h
+endif
+
+# explicit dependencies to force version.h to be built even if .depend is missing
+mplayer.o mencoder.o vobsub.o: version.h
+
+# temporary measure to make sure help_mp.h is built. we desperately need correct deps!
+$(MPLAYER_DEPS) $(MENCODER_DEPS): help_mp.h
+
+#
+# the following lines provide _partial_ dependency information
+# for the 'library' directories under main dir, in order to cause
+# the build process to recursively descend into them if something
+# has changed. ideally this will be replaced with a single
+# nonrecursive makefile for the whole project.
+#
+# Now all directories are recursed by default because these rules do not
+# consider dependencies on files in other directories, while the recursively
+# invoked Makefiles do. Conditional recursion only to the directories with
+# changed files can be enabled by creating a file named ".norecurse" and
+# optionally giving it a timestamp in the past. Directories whose .a files
+# are newer than the timestamp and newer than other files in the directory
+# will not be recursed.
+.norecurse:
+
+libvo/libvo.a: .norecurse $(wildcard libvo/*.[ch])
+libvo/libosd.a: .norecurse $(wildcard libvo/*.[ch])
+libao2/libao2.a: .norecurse $(wildcard libao2/*.[ch])
+osdep/libosdep.a: .norecurse $(wildcard osdep/*.[ch])
+input/libinput.a: .norecurse $(wildcard input/*.[ch])
+
+libmenu/libmenu.a: .norecurse $(wildcard libmenu/*.[ch])
+libaf/libaf.a: .norecurse $(wildcard libaf/*.[ch])
+dvdread/libdvdread.a: .norecurse $(wildcard dvdread/*.[ch])
+libdvdcss/libdvdcss.a: .norecurse $(wildcard libdvdcss/*.[ch])
+
+libmpdemux/libmpdemux.a: .norecurse $(wildcard libmpdemux/*.[ch])
+libmpdemux/libmpmux.a: .norecurse $(wildcard libmpdemux/*.[ch])
+stream/stream.a: .norecurse $(wildcard stream/*.[ch] stream/*/*.[ch])
+libmpcodecs/libmpcodecs.a: .norecurse $(wildcard libmpcodecs/*.[ch]) $(wildcard libmpcodecs/native/*.[ch])
+libmpcodecs/libmpencoders.a: .norecurse $(wildcard libmpcodecs/*.[ch])
+
+libavutil/libavutil.a: .norecurse $(wildcard libavutil/*.[ch])
+libavcodec/libavcodec.a: .norecurse $(wildcard libavcodec/*.[ch] libavcodec/*/*.[chS])
+libavformat/libavformat.a: .norecurse $(wildcard libavformat/*.[ch])
+libswscale/libswscale.a: .norecurse $(wildcard libswscale/*.[ch])
+
+libmpeg2/libmpeg2.a: .norecurse $(wildcard libmpeg2/*.[ch])
+libmpeg2_jz4740/libmpeg2.a: .norecurse $(wildcard libmpeg2/*.[ch])
+liba52/liba52.a: .norecurse $(wildcard liba52/*.[ch])
+mp3lib/libmp3.a: .norecurse $(wildcard mp3lib/*.[ch])
+libfaad2/libfaad2.a: .norecurse $(wildcard libfaad2/*.[ch] libfaad2/*/*.[ch])
+
+loader/libloader.a: .norecurse $(wildcard loader/*.[chSs])
+vidix/libvidix.a: .norecurse $(wildcard vidix/*.[ch])
+gui/libgui.a: .norecurse $(wildcard gui/*.[ch] gui/*/*.[ch] gui/*/*/*.[ch])
+
+libass/libass.a: .norecurse $(wildcard libass/*.[ch])
+jzcodecs/JZ4755/libh264/libh264dec.a: .norecurse $(wildcard jzcodecs/JZ4755/libh264/*.[ch])
+jzcodecs/JZ4755/libvc1/libvc1dec.a: .norecurse $(wildcard jzcodecs/JZ4755/libvc1/*.[ch])
+jzcodecs/JZ4755/libxvid.113/src/libxvidcore.a: .norecurse $(wildcard jzcodecs/JZ4755/libxvid.113/*.[ch])
+jzcodecs/JZ4750/libxvid/src/libxvidcore.a: .norecurse $(wildcard jzcodecs/JZ4750/libxvid/*.[ch])
+
+.PHONY: all install* uninstall strip doxygen doxygen_clean

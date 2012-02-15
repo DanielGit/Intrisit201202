@@ -1,0 +1,11 @@
+/*
+        Copyright (C), 2004 SEIKO EPSON Corp.
+                ALL RIGHTS RESERVED
+ 
+        file name : cctype
+ 
+        revision history
+                1st release     2004/12/24 K.Watanabe
+*/
+
+#include <c_std/std_cctype.h>

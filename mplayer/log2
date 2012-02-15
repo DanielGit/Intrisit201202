@@ -1,0 +1,165 @@
+
+/noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32 -O4 -mno-abicalls -fno-pic -fno-builtin -fno-exceptions -ffunction-sections -falign-functions=32 -finline-functions -fshort-wchar -fomit-frame-pointer -ffast-math -msoft-float -G 0 -Wall -DJZ4750_OPT -DJZ4755_OPT -DNOAH_OS -I./libavcodec -I./libavformat -Wdisabled-optimization -I. -I. -I./libavutil -I./libmpcodecs  -Wall -Wno-switch -Wpointer-arith -Wredundant-decls -pipe -ffast-math -fomit-frame-pointer -D_REENTRANT -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -DHAVE_CONFIG_H -I./madlib/libmad-0.15.1b -I./madlib/libmad-0.15.1b -I./uc_inc -I./uc_inc -I/noahos/Include -I/noahos/Include/libc -I/noahos/Include/libm -DUSE_16M_SDRAM=1 -DCONFIG_SMALL=1 -S -o mplayer.mid mplayer.c
+mplayer.c: In function 'SetSeekTime':
+mplayer.c:730: warning: unused variable 'err'
+mplayer.c: In function 'mplayer_seekabstime':
+mplayer.c:766: warning: assignment discards qualifiers from pointer target type
+mplayer.c:767: warning: assignment discards qualifiers from pointer target type
+mplayer.c: In function 'mplayer_CloseAudio':
+mplayer.c:877: warning: implicit declaration of function 'kprintf'
+mplayer.c: In function 'init_tcsm':
+mplayer.c:942: warning: passing argument 1 of 'uc_memset' discards qualifiers from pointer target type
+mplayer.c: In function 'init_tcsm1':
+mplayer.c:950: warning: passing argument 1 of 'uc_memset' discards qualifiers from pointer target type
+mplayer.c: In function 'initmplayer':
+mplayer.c:978: warning: implicit declaration of function 'os_GetProcessorID'
+mplayer.c: In function 'uninit_player':
+mplayer.c:1380: warning: unused variable 'my_err'
+mplayer.c: In function 'fill_audio_out_buffers':
+mplayer.c:2290: warning: unused variable 'dec_audio_time'
+mplayer.c: In function 'update_video':
+mplayer.c:2685: warning: label 'decode_video' defined but not used
+mplayer.c: In function 'seek_update_video':
+mplayer.c:2831: warning: label 'decode_video' defined but not used
+mplayer.c: In function 'c_mplay_main':
+mplayer.c:4346: warning: unused variable 'err'
+mplayer.c:4566: warning: unused variable 'err'
+mplayer.c:3709: warning: label 'play_next_file' defined but not used
+mplayer.c: At top level:
+mplayer.c:455: warning: 'mp_excptid' defined but not used
+mplayer.c:487: warning: 'saveregister' defined but not used
+mplayer.c:488: warning: 'singlefile' defined but not used
+mplayer.c:601: warning: 'get_cur_play_time' defined but not used
+mplayer.c: In function 'mplayer_seekabstime':
+mplayer.c:796: warning: 'err' is used uninitialized in this function
+mxu_as mplayer.mid > mplayer.s
+/noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32 -O4 -mno-abicalls -fno-pic -fno-builtin -fno-exceptions -ffunction-sections -falign-functions=32 -finline-functions -fshort-wchar -fomit-frame-pointer -ffast-math -msoft-float -G 0 -Wall -DJZ4750_OPT -DJZ4755_OPT -DNOAH_OS  -c -o mplayer.o mplayer.s
+make -C libvo libvo.a
+make[1]: Entering directory `/noahos/mplayer/libvo'
+make[1]: `libvo.a' is up to date.
+make[1]: Leaving directory `/noahos/mplayer/libvo'
+make -C libao2
+make[1]: Entering directory `/noahos/mplayer/libao2'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/libao2'
+make -C input
+make[1]: Entering directory `/noahos/mplayer/input'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/input'
+make -C libmpcodecs
+make[1]: Entering directory `/noahos/mplayer/libmpcodecs'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/libmpcodecs'
+make -C libaf
+make[1]: Entering directory `/noahos/mplayer/libaf'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/libaf'
+make -C libmpdemux libmpdemux.a
+make[1]: Entering directory `/noahos/mplayer/libmpdemux'
+make[1]: `libmpdemux.a' is up to date.
+make[1]: Leaving directory `/noahos/mplayer/libmpdemux'
+make -C stream
+make[1]: Entering directory `/noahos/mplayer/stream'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/stream'
+make -C libswscale
+make[1]: Entering directory `/noahos/mplayer/libswscale'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/noahos/mplayer/libswscale'
+make -C libvo libosd.a
+make[1]: Entering directory `/noahos/mplayer/libvo'
+make[1]: `libosd.a' is up to date.
+make[1]: Leaving directory `/noahos/mplayer/libvo'
+make -C plugin
+make[1]: Entering directory `/noahos/mplayer/plugin'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/plugin'
+make -C libavformat
+make[1]: Entering directory `/noahos/mplayer/libavformat'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/noahos/mplayer/libavformat'
+make -C libavcodec
+make[1]: Entering directory `/noahos/mplayer/libavcodec'
+Makefile.minios:454: warning: overriding commands for target `simple_idct.o'
+../common.mak:64: warning: ignoring old commands for target `simple_idct.o'
+Makefile.minios:458: warning: overriding commands for target `h264idct.o'
+../common.mak:64: warning: ignoring old commands for target `h264idct.o'
+Makefile.minios:462: warning: overriding commands for target `dsputil.o'
+../common.mak:64: warning: ignoring old commands for target `dsputil.o'
+Makefile.minios:466: warning: overriding commands for target `h264dsputil.o'
+../common.mak:64: warning: ignoring old commands for target `h264dsputil.o'
+Makefile.minios:470: warning: overriding commands for target `h264.o'
+../common.mak:64: warning: ignoring old commands for target `h264.o'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/noahos/mplayer/libavcodec'
+make -C libavutil
+make[1]: Entering directory `/noahos/mplayer/libavutil'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/noahos/mplayer/libavutil'
+make -C liba52
+make[1]: Entering directory `/noahos/mplayer/liba52'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/liba52'
+make -C libmpeg2
+make[1]: Entering directory `/noahos/mplayer/libmpeg2'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/libmpeg2'
+make -C jzcodecs/JZ4755/libh264 -f Makefile.ucos
+make[1]: Entering directory `/noahos/mplayer/jzcodecs/JZ4755/libh264'
+#@test -d ./rel
+#@cp ./jzsoc/jzh264/h264_aux_task.bin ./rel -f
+cp libh264dec.a ./rel
+make[1]: Leaving directory `/noahos/mplayer/jzcodecs/JZ4755/libh264'
+make -C jzcodecs/JZ4755/libxvid.113 -f Makefile.ucos
+make[1]: Entering directory `/noahos/mplayer/jzcodecs/JZ4755/libxvid.113'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/noahos/mplayer/jzcodecs/JZ4755/libxvid.113'
+make -C libfaad2
+make[1]: Entering directory `/noahos/mplayer/libfaad2'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/libfaad2'
+make -C osdep
+make[1]: Entering directory `/noahos/mplayer/osdep'
+make[1]: Nothing to be done for `libs'.
+make[1]: Leaving directory `/noahos/mplayer/osdep'
+make -C madlib
+make[1]: Entering directory `/noahos/mplayer/madlib'
+make[1]: `libmad.a' is up to date.
+make[1]: Leaving directory `/noahos/mplayer/madlib'
+rm -fv mplayer.a; mkdir -p ./LIBS/codecs
+removed `mplayer.a'
+/noahos/ToolChain/gcc-mips/bin/noahos-ar cruv mplayer.a  mplayer.o m_property.o mp_fifo.o mp_msg.o mixer.o parser-mpcmd.o ucfs_ex.o uclib.o mplaytm.o mplayer_fake.o  asxparser.o codec-cfg.o cpudetect.o edl.o find_sub.o get_path.o m_config.o m_option.o m_struct.o mpcommon.o parser-cfg.o playtree.o playtreeparser.o spudec.o subreader.o vobsub.o jz47_soc.o jzsoc/linux/jz47_soc_rsize.o mplayer_noahos.o unrarlib.o 
+a - mplayer.o
+a - m_property.o
+a - mp_fifo.o
+a - mp_msg.o
+a - mixer.o
+a - parser-mpcmd.o
+a - ucfs_ex.o
+a - uclib.o
+a - mplaytm.o
+a - mplayer_fake.o
+a - asxparser.o
+a - codec-cfg.o
+a - cpudetect.o
+a - edl.o
+a - find_sub.o
+a - get_path.o
+a - m_config.o
+a - m_option.o
+a - m_struct.o
+a - mpcommon.o
+a - parser-cfg.o
+a - playtree.o
+a - playtreeparser.o
+a - spudec.o
+a - subreader.o
+a - vobsub.o
+a - jz47_soc.o
+a - jzsoc/linux/jz47_soc_rsize.o
+a - mplayer_noahos.o
+a - unrarlib.o
+/noahos/ToolChain/gcc-mips/bin/noahos-ranlib mplayer.a
+cp -f mplayer.a libvo/libvo.a libao2/libao2.a input/libinput.a   libmpcodecs/libmpcodecs.a libmpcodecs/libmpcodecs_p.a libaf/libaf.a libmpdemux/libmpdemux.a stream/stream.a libswscale/libswscale.a libvo/libosd.a plugin/libmplugin.a  libavformat/libavformat.a libavcodec/libavcodec.a libavcodec/libavcodec_p.a libavutil/libavutil.a libpostproc/libpostproc.a liba52/liba52.a libmpeg2/libmpeg2.a jzcodecs/JZ4755/libh264/libh264dec.a jzcodecs/JZ4755/libvc1/libvc1dec.a jzcodecs/JZ4755/libxvid.113/libxvidcore.a libfaad2/libfaad2.a tremor/libvorbisidec.a osdep/libosdep.a madlib/libmad.a amr/spc.a amr/fipop.a jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a ./LIBS/
+cp -f mplayer.a libvo/libvo.a libao2/libao2.a input/libinput.a   libmpcodecs/libmpcodecs.a libmpcodecs/libmpcodecs_p.a libaf/libaf.a libmpdemux/libmpdemux.a stream/stream.a libswscale/libswscale.a libvo/libosd.a plugin/libmplugin.a  libavformat/libavformat.a libavcodec/libavcodec.a libavcodec/libavcodec_p.a libavutil/libavutil.a libpostproc/libpostproc.a liba52/liba52.a libmpeg2/libmpeg2.a jzcodecs/JZ4755/libh264/libh264dec.a jzcodecs/JZ4755/libvc1/libvc1dec.a jzcodecs/JZ4755/libxvid.113/libxvidcore.a libfaad2/libfaad2.a tremor/libvorbisidec.a osdep/libosdep.a madlib/libmad.a amr/spc.a amr/fipop.a jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a /noahos/UsrLib/LibOut/Jz4750/
+cp -f jzsoc/minios/codecs/JZ4755/*.bin ./LIBS/codecs

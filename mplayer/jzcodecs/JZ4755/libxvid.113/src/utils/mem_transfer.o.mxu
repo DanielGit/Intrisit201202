@@ -1,0 +1,399 @@
+	.file	1 "mem_transfer.c"
+	.section .mdebug.abi32
+	.previous
+	.text
+	.align	2
+	.globl	transfer_8to16copy_c
+	.ent	transfer_8to16copy_c
+transfer_8to16copy_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$9,$0
+$L2:
+	move	$7,$5
+	move	$3,$4
+	move	$8,$0
+$L3:
+	lbu	$2,0($7)
+	addiu	$8,$8,1
+	sh	$2,0($3)
+	li	$2,8			# 0x8
+	addiu	$7,$7,1
+	bne	$8,$2,$L3
+	addiu	$3,$3,2
+
+	addiu	$9,$9,1
+	addiu	$4,$4,16
+	bne	$9,$8,$L2
+	addu	$5,$5,$6
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_8to16copy_c
+	.size	transfer_8to16copy_c, .-transfer_8to16copy_c
+	.align	2
+	.globl	transfer_16to8copy_c
+	.ent	transfer_16to8copy_c
+transfer_16to8copy_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$11,$4
+	move	$10,$5
+	move	$12,$0
+$L11:
+	move	$8,$10
+	move	$7,$11
+	move	$9,$0
+$L12:
+	lh	$3,0($8)
+	li	$4,255			# 0xff
+	slt	$5,$3,256
+	movz	$3,$4,$5
+	nor	$2,$0,$3
+	sra	$2,$2,31
+	and	$3,$3,$2
+	addiu	$9,$9,1
+	li	$2,8			# 0x8
+	sb	$3,0($7)
+	addiu	$8,$8,2
+	bne	$9,$2,$L12
+	addiu	$7,$7,1
+
+	addiu	$12,$12,1
+	addu	$11,$11,$6
+	bne	$12,$9,$L11
+	addiu	$10,$10,16
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_16to8copy_c
+	.size	transfer_16to8copy_c, .-transfer_16to8copy_c
+	.align	2
+	.globl	transfer_8to16sub_c
+	.ent	transfer_8to16sub_c
+transfer_8to16sub_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$13,$0
+	move	$12,$0
+$L21:
+	addu	$8,$5,$12
+	addu	$10,$6,$12
+	move	$9,$4
+	move	$11,$0
+$L22:
+	lbu	$2,0($8)
+	lbu	$3,0($10)
+	addiu	$11,$11,1
+	subu	$2,$2,$3
+	sb	$3,0($8)
+	sh	$2,0($9)
+	li	$2,8			# 0x8
+	addiu	$8,$8,1
+	addiu	$10,$10,1
+	bne	$11,$2,$L22
+	addiu	$9,$9,2
+
+	addiu	$13,$13,1
+	addiu	$4,$4,16
+	bne	$13,$11,$L21
+	addu	$12,$12,$7
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_8to16sub_c
+	.size	transfer_8to16sub_c, .-transfer_8to16sub_c
+	.align	2
+	.globl	transfer_8to16subro_c
+	.ent	transfer_8to16subro_c
+transfer_8to16subro_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$13,$0
+	move	$12,$0
+$L29:
+	addu	$10,$5,$12
+	addu	$9,$6,$12
+	move	$8,$4
+	move	$11,$0
+$L30:
+	lbu	$2,0($10)
+	lbu	$3,0($9)
+	addiu	$11,$11,1
+	subu	$2,$2,$3
+	sh	$2,0($8)
+	li	$2,8			# 0x8
+	addiu	$10,$10,1
+	addiu	$9,$9,1
+	bne	$11,$2,$L30
+	addiu	$8,$8,2
+
+	addiu	$13,$13,1
+	addiu	$4,$4,16
+	bne	$13,$11,$L29
+	addu	$12,$12,$7
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_8to16subro_c
+	.size	transfer_8to16subro_c, .-transfer_8to16subro_c
+	.align	2
+	.globl	transfer_8to16sub2_c
+	.ent	transfer_8to16sub2_c
+transfer_8to16sub2_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lw	$15,16($sp)
+	move	$14,$0
+	move	$13,$0
+$L37:
+	addu	$8,$5,$13
+	addu	$11,$6,$13
+	addu	$10,$7,$13
+	move	$9,$4
+	move	$12,$0
+$L38:
+	lbu	$3,0($11)
+	lbu	$2,0($10)
+	addiu	$3,$3,1
+	addu	$2,$2,$3
+	sra	$2,$2,1
+	lbu	$3,0($8)
+	andi	$2,$2,0x00ff
+	sb	$2,0($8)
+	subu	$3,$3,$2
+	addiu	$12,$12,1
+	li	$2,8			# 0x8
+	sh	$3,0($9)
+	addiu	$8,$8,1
+	addiu	$11,$11,1
+	addiu	$10,$10,1
+	bne	$12,$2,$L38
+	addiu	$9,$9,2
+
+	addiu	$14,$14,1
+	addiu	$4,$4,16
+	bne	$14,$12,$L37
+	addu	$13,$13,$15
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_8to16sub2_c
+	.size	transfer_8to16sub2_c, .-transfer_8to16sub2_c
+	.align	2
+	.globl	transfer_8to16sub2ro_c
+	.ent	transfer_8to16sub2ro_c
+transfer_8to16sub2ro_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	lw	$15,16($sp)
+	move	$14,$0
+	move	$13,$0
+$L45:
+	addu	$12,$5,$13
+	addu	$10,$6,$13
+	addu	$9,$7,$13
+	move	$8,$4
+	move	$11,$0
+$L46:
+	lbu	$3,0($10)
+	lbu	$2,0($9)
+	addiu	$3,$3,1
+	addu	$2,$2,$3
+	sra	$2,$2,1
+	lbu	$3,0($12)
+	andi	$2,$2,0x00ff
+	subu	$3,$3,$2
+	addiu	$11,$11,1
+	li	$2,8			# 0x8
+	sh	$3,0($8)
+	addiu	$12,$12,1
+	addiu	$10,$10,1
+	addiu	$9,$9,1
+	bne	$11,$2,$L46
+	addiu	$8,$8,2
+
+	addiu	$14,$14,1
+	addiu	$4,$4,16
+	bne	$14,$11,$L45
+	addu	$13,$13,$15
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_8to16sub2ro_c
+	.size	transfer_8to16sub2ro_c, .-transfer_8to16sub2ro_c
+	.align	2
+	.globl	transfer_16to8add_c
+	.ent	transfer_16to8add_c
+transfer_16to8add_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$11,$5
+	move	$10,$4
+	move	$12,$0
+$L53:
+	move	$7,$10
+	move	$8,$11
+	move	$9,$0
+$L54:
+	lhu	$2,0($8)
+	lbu	$3,0($7)
+	li	$4,255			# 0xff
+	addu	$3,$3,$2
+	sll	$3,$3,16
+	sra	$3,$3,16
+	slt	$5,$3,256
+	movz	$3,$4,$5
+	nor	$2,$0,$3
+	sra	$2,$2,31
+	and	$3,$3,$2
+	addiu	$9,$9,1
+	li	$2,8			# 0x8
+	sb	$3,0($7)
+	addiu	$8,$8,2
+	bne	$9,$2,$L54
+	addiu	$7,$7,1
+
+	addiu	$12,$12,1
+	addiu	$11,$11,16
+	bne	$12,$9,$L53
+	addu	$10,$10,$6
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer_16to8add_c
+	.size	transfer_16to8add_c, .-transfer_16to8add_c
+	.align	2
+	.globl	transfer8x8_copy_c
+	.ent	transfer8x8_copy_c
+transfer8x8_copy_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$11,$0
+	move	$10,$0
+	li	$9,8			# 0x8
+	li	$12,8			# 0x8
+$L63:
+	addu	$7,$4,$10
+	addu	$3,$5,$10
+	move	$8,$0
+$L64:
+	lbu	$2,0($3)
+	addiu	$8,$8,1
+	sb	$2,0($7)
+	addiu	$3,$3,1
+	bne	$8,$9,$L64
+	addiu	$7,$7,1
+
+	addiu	$11,$11,1
+	bne	$11,$12,$L63
+	addu	$10,$10,$6
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer8x8_copy_c
+	.size	transfer8x8_copy_c, .-transfer8x8_copy_c
+	.align	2
+	.globl	transfer8x4_copy_c
+	.ent	transfer8x4_copy_c
+transfer8x4_copy_c:
+	.frame	$sp,0,$31		# vars= 0, regs= 0/0, args= 0, gp= 0
+	.mask	0x00000000,0
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	nomacro
+	
+	move	$7,$0
+	li	$8,4			# 0x4
+$L73:
+	lw	$2,0($5)
+	addiu	$7,$7,1
+	sw	$2,0($4)
+	lw	$3,4($5)
+	addu	$5,$5,$6
+	sw	$3,4($4)
+	bne	$7,$8,$L73
+	addu	$4,$4,$6
+
+	j	$31
+	nop
+
+	.set	macro
+	.set	reorder
+	.end	transfer8x4_copy_c
+	.size	transfer8x4_copy_c, .-transfer8x4_copy_c
+
+	.comm	transfer_8to16copy,4,4
+
+	.comm	transfer_16to8copy,4,4
+
+	.comm	transfer_8to16sub,4,4
+
+	.comm	transfer_8to16subro,4,4
+
+	.comm	transfer_8to16sub2,4,4
+
+	.comm	transfer_8to16sub2ro,4,4
+
+	.comm	transfer_16to8add,4,4
+
+	.comm	transfer8x8_copy,4,4
+
+	.comm	transfer8x4_copy,4,4
+	.ident	"GCC: (GNU) 4.1.2"

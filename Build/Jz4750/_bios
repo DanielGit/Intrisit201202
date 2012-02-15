@@ -1,0 +1,11 @@
+combin BootBoot.bin 0x2000 Boot.bin Boot.bin
+combin BootLoader.bin 0x4000 BootBoot.bin Loader.bin
+rm BootBoot.bin
+combin _v2Bios.bin 0x80000 BootLoader.bin _noahos.bin
+rm BootLoader.bin
+v2combine V2Bios.bin 0x1000 0x801f0 _v2Bios.bin BiosApp.bin
+rm _v2Bios.bin
+GetRevision V2Bios.bin 0x801fc http://192.168.1.186/svn/noahosv2
+BiosVer 0xC5000000 0x801f8 V2Bios.bin NOAH_NC500
+cp V2Bios.bin ../../bios.bin
+cp V2Bios.bin ../../nc500bios.bin

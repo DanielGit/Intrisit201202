@@ -1,0 +1,4 @@
+#! /bin/bash
+awk 'BEGIN{FS="[,\t]"; main_switch=0;}($0 ~/main\:/){main_switch=1;}(($0 ~/fmask/) && main_switch) {print $0; print "\tla\t$sp, 0xf400fffc\n" ; getline} 
+(($0 ~/_gp	#i_la/) && main_switch) { main_switch=0; print $0; print "\tori\t$28," $3 ", 0\n ";getline} 
+{print;}' $1
