@@ -35,12 +35,11 @@ VD_PLUGIN = mpcodecs_vd_realvid  \
             ffmpeg_vd_mpegvideo  \
             ffmpeg_vd_mpegmisc   \
             ffmpeg_vd_mpegmisc2  \
-            mpcodecs_vd_xvid     \
             mpcodecs_vd_realvid_rv8
 
 #
 MLIBS := libmplugin.a libavcodec_p.a libmpcodecs_p.a libavutil.a libwmafix.a libmpeg2.a libfaad2.a liba52.a spc.a fipop.a librv89_aac.a libmad.a \
-         libxvidcore.a libh264dec.a libavcodec_p.a
+         libxvidcore.a  libavcodec_p.a
 LIBS :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBS))
 LIBS 	+= $(TOP)/Usrlib/libout/libgcc_mipsel.a $(TOP)/Usrlib/libout/mips_klibc.a
 
@@ -50,10 +49,10 @@ LIBDEMUX :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBDEMUX))
 MLIBVORBIS := libvorbisidec.a
 LIBVORBIS :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBVORBIS))
 
-MLIBVC1 := libmplugin.a libvc1dec.a
+MLIBVC1 := libmplugin.a libavcodec_p.a
 LIBVC1 :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBVC1))
 
-MLIBH264 := libmplugin.a libh264dec.a libavcodec_p.a
+MLIBH264 := libmplugin.a libavcodec_p.a
 LIBH264 :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBH264))
 
 MLIBRV8 := librv89_jz4740.a

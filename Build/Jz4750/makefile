@@ -125,7 +125,7 @@ MLIBS := mplayer.a libvo.a libao2.a libinput.a libmpcodecs.a libaf.a libmpdemux.
          libpostproc.a liba52.a libmpeg2.a libfaad2.a libvorbisidec.a libosdep.a libmad.a spc.a fipop.a av_sync.a
 
 LIBS  = $(addprefix $(TOP)/UsrLib/libout/JZ4750/, $(MLIBS))
-LIBS 	+= $(TOP)/Usrlib/libout/libgcc_mipsel.a $(TOP)/Usrlib/libout/mips_klibc.a
+LIBS 	+= _noahos.a $(TOP)/Usrlib/libout/libgcc_mipsel.a $(TOP)/Usrlib/libout/mips_klibc.a
 
 ifeq ($(MAKECMDGOALS), drv)
 LIBS 	+= $(TARGET).a
@@ -168,7 +168,7 @@ all : $(PROGRAM)
 	@cd $(TOP)/AppLogo/build/MIPS && make
 	@cp -p $(TOP)/AppLogo/build/MIPS/logo.bin ./
 
-	make1 -C plugin
+	make -C plugin
 	@echo 
 	@echo Creating binary...
 	cp ./plugin/mplayer_plugin.bin ./
@@ -236,7 +236,7 @@ objs : $(OBJS)
 rebuild: clean all 
 
 clean : 
-	$(RM) *.o *.d $(TARGET).*
+	$(RM) *.o *.d $(TARGET).elf $(TARGET).bin *.bin *.sym *.map #$(TARGET).*
 
 # 生成依赖文件规则
 #--------------------------------------------------- 

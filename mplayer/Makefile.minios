@@ -292,16 +292,16 @@ mplayer$(EXESUF): $(MPLAYER_DEPS) $(LIBS_MPLAYER) $(COMMON_LIBS)
 	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a ./LIBS/
 ifeq ($(JZ4755_BSP),1)
 	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a /noahos/UsrLib/libout/JZ4755/
+	$(CP) jzsoc/minios/codecs/JZ4755/*.bin ./LIBS/codecs
 else	
 ifeq ($(JZ4725_BSP),1)
 	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a /noahos/UsrLib/libout/JZ4750L/
 else
 ifeq ($(JZ4750_BSP),1)
-	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a /noahos/UsrLib/libout/JZ4750/
+	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4750/*.a ../UsrLib/libout/JZ4750/
 endif
 endif	
 endif	
-	$(CP) jzsoc/minios/codecs/JZ4755/*.bin ./LIBS/codecs
 
 #mplayer_ld.o: mplayer$(EXESUF) $(LIBS_MPLAYER) $(COMMON_LIBS) ../LIBS/libwmafix.a ../LIBS/libuc.a
 #	cd ./libmpdemux;$(MAKE) -f plugin.mak;rm -f *.a
