@@ -39,7 +39,7 @@ VD_PLUGIN = mpcodecs_vd_realvid  \
 
 #
 MLIBS := libmplugin.a libavcodec_p.a libmpcodecs_p.a libavutil.a libwmafix.a libmpeg2.a libfaad2.a liba52.a spc.a fipop.a librv89_aac.a libmad.a \
-         libxvidcore.a  libavcodec_p.a
+         libavcodec_p.a
 LIBS :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBS))
 LIBS 	+= $(TOP)/Usrlib/libout/libgcc_mipsel.a $(TOP)/Usrlib/libout/mips_klibc.a
 
@@ -61,16 +61,10 @@ LIBRV8 :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBRV8))
 MLIBRV9 := librv89_jz4740.a
 LIBRV9 :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750/, $(MLIBRV9))
 
-AUXBIN := $(addprefix $(TOP)/mplayer/libs/codecs/, aux_task.bin h264_aux_task.bin vc1_aux_task.bin xvid_aux_task.bin)
-
 all: mplayer_plugin.bin
 
-mplayer_plugin.bin: newsym.lds $(AD_PLUGIN) $(VD_PLUGIN) $(EXTPLUG) av_codec_table copy_aux 
+mplayer_plugin.bin: newsym.lds $(AD_PLUGIN) $(VD_PLUGIN) $(EXTPLUG) av_codec_table
 #
-	echo "aux_task = 0xB3808000"       > address.lds
-	echo "h264_aux_task  = 0xB3808000"  >> address.lds
-	echo "xvid_aux_task  = 0x93808000"  >> address.lds
-	echo "vc1_aux_task   = 0x93808000"  >> address.lds
 	echo "h264_cavlc_tcsm_text = 0xF4000000"   >> address.lds
 	echo "h264_cabac_tcsm_text = 0xF4002000"   >> address.lds
 	echo "tcsm0_bank3 = 0xF4003000"            >> address.lds
@@ -186,11 +180,8 @@ demux_ogg.a: $(LIBDEMUX)
 	$(AR) x $(LIBDEMUX) demux_ogg.o
 	$(AR) cruv demux_ogg.a demux_ogg.o
 ##
-copy_aux: $(AUXBIN)
-	cp -fv $^ ./HostLink
-	touch $@
 
 clean:
 	rm -fv newsym.lds link_vd.xn link_ad.xn $(AD_PLUGIN) $(VD_PLUGIN) $(EXTPLUG) \
-	       *.elf av_codec_table demux_ogg* *.dump *.a *.bin copy_aux HostLink/* *.sed address.lds
+	       *.elf av_codec_table demux_ogg* *.dump *.a *.bin HostLink/* *.sed address.lds
 
