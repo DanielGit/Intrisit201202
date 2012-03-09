@@ -2,6 +2,6 @@ cp ./plugin/mplayer_plugin.bin ./
 v2combine _v2.bin 0x400 0x1f0 _noahos.bin logo.bin
 v2combine v2.bin 0x400 0x1e8 _v2.bin mplayer_plugin.bin
 GetRevision v2.bin 0x1fc http://192.168.1.186/svn/noahosv2
-version 0xD7000000 0x1f8 v2.bin NOAH_APP_NP7000
+version 0xD580000A 0x1f8 v2.bin NOAH_APP_NP5800+
 cp v2.bin ../../system.bin
-cp v2.bin ../../np7000.bin
+cp v2.bin ../../np5800+.bin

@@ -5434,37 +5434,6 @@ long labs(long x)
   return x;
 }
 
-void kdebug ()
-{
-	return;
-}
-
-void __dcache_inv ()
-{
-	return;
-}
-
-void ThreadSetAsid ()
-{
-	return;
-}
-
-void ThreadResetAsid ()
-{
-	return;
-}
-
-void WinClipMask ()
-{
-	return;
-}
-
-
-void DirectCallTable ()
-{
-	return;
-}
-
 char * mixer_device=NULL;
 char * mixer_channel=NULL;
 int soft_vol = 0;

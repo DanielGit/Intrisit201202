@@ -87,8 +87,8 @@
 #define CONFIG_AMP_DIS				0				// 功放禁止
 
 #define CONFIG_PIPO_IO				(32*4+0)		// 波波音控制IO
-#define CONFIG_PIPO_ENA				1			// 波波音MOS管打开
-#define CONFIG_PIPO_DIS				0			// 波波音MOS管关闭
+#define CONFIG_PIPO_ENA				1				// 波波音MOS管打开
+#define CONFIG_PIPO_DIS				0				// 波波音MOS管关闭
 
 #define CONFIG_ERAPHONE_IO			(32*4+11)		// 耳机插入检测IO
 #define CONFIG_ERAPHONE_INERT 		0				// 耳机插入检测电平

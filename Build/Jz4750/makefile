@@ -23,72 +23,8 @@ ifneq ($(MAKECMDGOALS),cfgbios)
 ifneq ($(MAKECMDGOALS),cfgburn)
 SRCDIRS := 
 
-SRCDIRS += $(TOP)/Init/JZ4750
-
-SRCDIRS += $(TOP)/Kernel/kArch
-SRCDIRS += $(TOP)/Kernel/kCore
-SRCDIRS += $(TOP)/Kernel/kIpc
-SRCDIRS += $(TOP)/Kernel/kLib
-SRCDIRS += $(TOP)/Kernel/kMem
-SRCDIRS += $(TOP)/Kernel/kSync
-SRCDIRS += $(TOP)/FileSys/FTLV2
-SRCDIRS += $(TOP)/FileSys/FsIo
-SRCDIRS += $(TOP)/FileSys/RFS
-SRCDIRS += $(TOP)/FileSys/FAT
-SRCDIRS += $(TOP)/FileSys/FS
-SRCDIRS += $(TOP)/FileSys/MISC
-SRCDIRS += $(TOP)/FileSys/DEVF
-SRCDIRS += $(TOP)/FileSys/iso9660
-SRCDIRS += $(TOP)/FileSys/iNAND
-SRCDIRS += $(TOP)/FileSys/SDIO
-SRCDIRS += $(TOP)/FileSys/Burn
-SRCDIRS += $(TOP)/GUI/Win
-SRCDIRS += $(TOP)/GUI/WinApi
-SRCDIRS += $(TOP)/GUI/WinDrv
-SRCDIRS += $(TOP)/GUI/WinGdi
-SRCDIRS += $(TOP)/GUI/WinMsg
-SRCDIRS += $(TOP)/GUI/WinTree
-SRCDIRS += $(TOP)/SysLib
-SRCDIRS += $(TOP)/Font/FontApi
-SRCDIRS += $(TOP)/Font/FontDot
-SRCDIRS += $(TOP)/Font/FontDrv
-SRCDIRS += $(TOP)/Font/TrueType/autofit
-SRCDIRS += $(TOP)/Font/TrueType/base
-SRCDIRS += $(TOP)/Font/TrueType/drive
-SRCDIRS += $(TOP)/Font/TrueType/sfnt
-SRCDIRS += $(TOP)/Font/TrueType/smooth
-SRCDIRS += $(TOP)/Font/TrueType/truetype
 SRCDIRS += $(TOP)/Direct
-ifneq ($(MAKECMDGOALS),lib)
 SRCDIRS += $(TOP)/Direct/Media/JZ4750
-endif
-SRCDIRS += $(TOP)/Direct/Media/MediaLib
-SRCDIRS += $(TOP)/Direct/Media/MediaLib/Mp3Dec
-SRCDIRS += $(TOP)/Direct/Media/MediaLib/Midi
-SRCDIRS += $(TOP)/Direct/Surface/JZ4750
-SRCDIRS += $(TOP)/Direct/HandWrite
-SRCDIRS += $(TOP)/Direct/Osd/JZ4750
-SRCDIRS += $(TOP)/Direct/WaveOut/JZ4750
-
-SRCDIRS += $(TOP)/Peripheral/MultiIo
-SRCDIRS += $(TOP)/Peripheral/Audio
-SRCDIRS += $(TOP)/Peripheral/Clock
-SRCDIRS += $(TOP)/Peripheral/Indicator
-SRCDIRS += $(TOP)/Peripheral/Keyboard
-SRCDIRS += $(TOP)/Peripheral/Lcdc
-SRCDIRS += $(TOP)/Peripheral/NAND
-SRCDIRS += $(TOP)/Peripheral/iNand
-SRCDIRS += $(TOP)/Peripheral/Power
-SRCDIRS += $(TOP)/Peripheral/RTC
-SRCDIRS += $(TOP)/Peripheral/SD
-SRCDIRS += $(TOP)/Peripheral/Touch
-SRCDIRS += $(TOP)/Peripheral/UART
-SRCDIRS += $(TOP)/Peripheral/Usb
-SRCDIRS += $(TOP)/Peripheral/Usb/UsbStack
-SRCDIRS += $(TOP)/Peripheral/Usb/JZ4750/UsbDev
-SRCDIRS += $(TOP)/Peripheral/Watchdog
-SRCDIRS += $(TOP)/Peripheral/Memory
-SRCDIRS += $(TOP)/Peripheral/Codec
 
 endif
 endif
@@ -153,7 +89,7 @@ VPATH   := $(SRCDIRS)
 PROGRAM = $(addsuffix .elf, $(TARGET))
 PROGRAM = $(addsuffix .elf, $(TARGET))
 SOURCES = $(foreach d, $(SRCDIRS), $(wildcard $(addprefix $(d)/*, $(SRCEXTS)))) 
-OBJS	= $(addsuffix .o, $(basename $(notdir $(SOURCES))))
+OBJS	= boot.o $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 DEPS    = $(patsubst %.o, %.d, $(OBJS)) 
 
 .PHONY : all objs clean cleanall rebuild lib bios cfgbios
@@ -179,8 +115,11 @@ all : $(PROGRAM)
 	@sh _release
 #	cp $(TARGET).bin $(TOP)/ToolChain/uboot-fix/JZ4750/
 
+boot.o: boot.xo
+	cp -fv boot.xo boot.o	
+	
 cfgsys : 
-	cp -p $(TOP)/Include/config/JZ4750.h $(TOP)/Include/config.h
+	cp -p $(TOP)/Include/config/np5800+.h $(TOP)/Include/config.h
 
 bios : $(PROGRAM) Loader.bin
 	@echo 
