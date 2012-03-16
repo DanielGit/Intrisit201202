@@ -73,7 +73,11 @@ extern short const dc_threshold[];
 extern VLC_TABLE const coeff_tab[2][102];
 extern uint8_t const max_level[2][2][64];
 extern uint8_t const max_run[2][2][64];
+#ifdef JZC_SYS
+extern VLC *sprite_trajectory_code;
+#else
 extern VLC sprite_trajectory_code[32768];
+#endif
 extern VLC sprite_trajectory_len[15];
 extern VLC mcbpc_intra_tab[15];
 extern VLC mcbpc_inter_tab[29];

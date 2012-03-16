@@ -24,9 +24,14 @@
  *
  ****************************************************************************/
 
+#ifdef _UCOS_
+#include <mplaylib.h>
+#include "mplaylib.h"
+#else
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#endif
 
 #include "../portab.h"
 #include "../global.h"

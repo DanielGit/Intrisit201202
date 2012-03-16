@@ -112,6 +112,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 	cpu_flags = (init->cpu_flags & XVID_CPU_FORCE) ? init->cpu_flags : detect_cpu_flags();
 
+#ifdef JZC_SYS
+	if(init_mbcoding_data())
+	  return XVID_ERR_MEMORY;
+#endif
+
 	/* Initialize the function pointers */
 #ifdef JZC_MXU_OPT
 #else

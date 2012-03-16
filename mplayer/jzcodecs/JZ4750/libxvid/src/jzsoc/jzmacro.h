@@ -5,6 +5,7 @@
 #define __JZ_MACRO_H__
 
 //test environment
+#define _UCOS_
 /*sys related macro*/
 #define JZC_SYS
 #define JZC_DCORE_ARCH

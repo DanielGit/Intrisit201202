@@ -87,6 +87,7 @@ COMMON_LIBS-yes                   += jzcodecs/JZ4755/libvc1/libvc1dec.a
 COMMON_LIBS-yes                   += jzcodecs/JZ4755/libxvid.113/libxvidcore.a
 else ifeq ($(JZ4750_BSP),1)
 COMMON_LIBS-$(LIBMPEG2)           += libmpeg2/libmpeg2.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4750/libxvid/libxvidcore.a
 else
 COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
 endif
@@ -283,6 +284,9 @@ jzcodecs/JZ4755/libvc1/libvc1dec.a:
 
 jzcodecs/JZ4755/libxvid.113/libxvidcore.a:
 	$(MAKE) -C jzcodecs/JZ4755/libxvid.113 -f Makefile.ucos
+	
+jzcodecs/JZ4750/libxvid/libxvidcore.a:
+	$(MAKE) -C jzcodecs/JZ4750/libxvid -f Makefile
 
 mplayer$(EXESUF): $(MPLAYER_DEPS) $(LIBS_MPLAYER) $(COMMON_LIBS)
 #	$(CC) -o $@ -c $^
@@ -499,5 +503,6 @@ madlib/libmad.a: .norecurse $(wildcard madlib/*.[ch] madlib/*/*.[ch])
 jzcodecs/JZ4755/libh264/libh264dec.a: .norecurse $(wildcard jzcodecs/JZ4755/libh264/*.[ch])
 zcodecs/JZ4755/libvc1/libvc1dec.a: .norecurse $(wildcard jzcodecs/JZ4755/libvc1/*.[ch])
 jzcodecs/JZ4755/libxvid.113/libxvidcore.a: .norecurse $(wildcard jzcodecs/JZ4755/libxvid.113/*.[ch])
+jzcodecs/JZ4750/libxvid/libxvidcore.a: .norecurse $(wildcard jzcodecs/JZ4750/libxvid/*.[ch])
 
 .PHONY: all install* uninstall strip doxygen doxygen_clean

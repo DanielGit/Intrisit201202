@@ -16,10 +16,10 @@ PREFIX 		= $(DESTDIR)/usr/local
 BINDIR 		= $(DESTDIR)/usr/local/bin
 LIBDIR 		= $(DESTDIR)/usr/local/lib
 
-AR 		= ar
-CC 		= mipsel-linux-gcc -mips32
-CXX 		= mipsel-linux-gcc -mips32
-AS		= mipsel-linux-as -mips32
+AR 		= /noahos/ToolChain/gcc-mips/bin/noahos-ar
+CC 		= /noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32
+CXX 	= /noahos/ToolChain/gcc-mips/bin/noahos-g++  -mips32
+AS		= /noahos/ToolChain/gcc-mips/bin/noahos-as -mips32
 RANLIB		= true
 
 XVID_OBJ	= xvid_dec.o \
@@ -60,8 +60,11 @@ JZC_MACRO	= jzsoc/jzmacro.h
 XVID_INC_OPT	= -Ibitstream -Iquant -Idct -Iimage -Imotion -Iprediction -Iutils \
 	          -I/usr/X11R6/include -I/opt/motif21/include -Ijzsoc
 
-GCC_OPT		= $(XVID_INC_OPT) $(ARCHITECTURE) $(BUS) $(ENDIANNESS) \
-		  $(GCC_ENDIAN_OPT) -imacros $(JZC_MACRO) $(GCC_EXTRA_OPT)
+CCFLAGS         = -c -O2 -mtune=r4600 -mips32 -mlong-calls -fno-builtin  -DIPU_THROUGHT_MODE \
+                  -mno-abicalls -fno-pic -pipe -G 0 -msoft-float
+
+GCC_OPT		= $(CCFLAGS) $(XVID_INC_OPT) $(ARCHITECTURE) $(BUS) $(ENDIANNESS) \
+		  $(GCC_ENDIAN_OPT) -imacros $(JZC_MACRO) $(GCC_EXTRA_OPT) -I../../../../ -I../../../../uc_inc -I/noahos/Include/libc -I/noahos/Include
 
 #============================= Make action define
 libs: $(XVID_LIB)
@@ -77,6 +80,13 @@ $(XVID_OBJ2): %.o: %.c $(JZC_MACRO)
 $(XVID_LIB):$(XVID_OBJ) $(XVID_OBJ2) $(MXU_OBJ)
 	$(AR) r $(XVID_LIB) $(MXU_OBJ) $(XVID_OBJ) $(XVID_OBJ2)
 	$(RANLIB) $(XVID_LIB)
+	cp -fv $(XVID_LIB) ../
+	
+image/image_dec.o: image/image_dec.c
+	$(CC) $(GCC_OPT) -S $<
+	mxu_as image_dec.s > image_dec_mxu.s
+	$(AS) -o $@ image_dec_mxu.s
+		
 quant/dequant_h263.o:quant/dequant_h263.c
 	$(CC) $(GCC_OPT) -S $<
 	mxu_as dequant_h263.s > dequant_h263_mxu.s

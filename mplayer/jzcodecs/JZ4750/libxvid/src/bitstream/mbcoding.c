@@ -1725,8 +1725,27 @@ uint8_t const max_run[2][2][64] = {
 /******************************************************************
  * encoder tables                                                 *
  ******************************************************************/
+#ifdef JZC_SYS 
+uint8_t *sprite_trajectory_code_ptr;
+VLC *sprite_trajectory_code;
+int32_t init_mbcoding_data()
+{
+  sprite_trajectory_code_ptr = (uint8_t *)xvid_malloc(32768 *sizeof(VLC) + 32 + 4);
+  if(sprite_trajectory_code_ptr == NULL){
+    xvid_free(sprite_trajectory_code_ptr);
+    return 1;
+  } else
+    sprite_trajectory_code = (VLC *)(((uint32_t)sprite_trajectory_code_ptr+31) & ~31);
+  return 0;
+}
 
+void deinit_mbcoding_data()
+{
+  xvid_free(sprite_trajectory_code_ptr);
+}
+#else
 VLC sprite_trajectory_code[32768];
+#endif
 
 VLC sprite_trajectory_len[15] = {
 	{ 0x00 , 2},

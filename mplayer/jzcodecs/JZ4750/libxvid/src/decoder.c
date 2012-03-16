@@ -24,9 +24,14 @@
  *
  ****************************************************************************/
 
+#ifdef _UCOS_
+#include <mplaylib.h>
+#include "mplaylib.h"
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#endif
 
 #ifdef BFRAMES_DEC_DEBUG
 #define BFRAMES_DEC
@@ -133,6 +138,11 @@ typedef struct
   uint8_t V[MB_CHROM_SIZE];  
 }RCON_IMAGE;
 
+
+unsigned int get_phy_addr (unsigned int vaddr)
+{
+	return (vaddr & 0x1fffffff);
+}
 
 RCON_IMAGE *g_IMGPtr0 = (RCON_IMAGE *)RCON_IMAGE_BUF0,*g_IMGPtr1 = (RCON_IMAGE *)RCON_IMAGE_BUF1;
 void *temp;
@@ -464,6 +474,11 @@ decoder_destroy(DECODER * dec)
   xvid_free(dec->last_mbs);
   xvid_free(dec->mbs);
   xvid_free(dec->qscale);
+  
+#ifdef JZC_SYS
+  deinit_mbcoding_data();
+#endif  
+  
 
 #ifdef IPU_THROUGHT_MODE
   image_destroy(&dec->image_buf[0], dec->edged_width, dec->edged_height);

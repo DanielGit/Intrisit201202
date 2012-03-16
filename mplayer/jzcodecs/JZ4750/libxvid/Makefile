@@ -16,9 +16,9 @@ PREFIX 		= $(DESTDIR)/usr/local
 BINDIR 		= $(DESTDIR)/usr/local/bin
 LIBDIR 		= $(DESTDIR)/usr/local/lib
 
-AR 		= ar
-CC 		= mipsel-linux-gcc -mips32
-CXX 		= mipsel-linux-gcc -mips32
+AR 		= /noahos/ToolChain/gcc-mips/bin/noahos-ar
+CC 		= /noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32
+CXX 		= /noahos/ToolChain/gcc-mips/bin/noahos-g++  -mips32
 MAKE		= make
 COPY		= mipsel-linux-objcopy
 
@@ -36,17 +36,22 @@ ABI_DIR		= el/mabi32
 
 GCC_EXTRA_OPT   = -Wall -Wno-switch -Wpointer-arith -Wredundant-decls -O2 -pipe -ffast-math -fomit-frame-pointer -DIPU_THROUGHT_MODE
 
+CCFLAGS         = -c -O2 -mtune=r4600 -mips32 -mlong-calls -fno-builtin  -DIPU_THROUGHT_MODE \
+                  -mno-abicalls -fno-pic -pipe -G 0 -msoft-float
+
 #============================= Internal macro define 
 # des changed to have 3 keys
 JZC_MACRO	= src/jzsoc/jzmacro.h
 
 XVID_INC_OPT	= -Isrc -I/usr/X11R6/include \
 		  -I/opt/motif21/include 
-GCC_OPT		= $(XVID_INC_OPT) $(ARCHITECTURE) $(BUS) $(ENDIANNESS) \
-		  $(GCC_ENDIAN_OPT) -imacros $(JZC_MACRO) $(GCC_EXTRA_OPT)
+	  
+GCC_OPT		= $(CCFLAGS) $(XVID_INC_OPT) $(ARCHITECTURE) $(BUS) $(ENDIANNESS) \
+		  $(GCC_ENDIAN_OPT) -imacros $(JZC_MACRO) $(GCC_EXTRA_OPT)  -I../../../ -I../../../uc_inc -I/noahos/Include/libc -I/noahos/Include
+
 
 #============================= Make action define
-all: $(REAL_EXE) #$(AUX_BIN)
+all: $(XVID_LIB) #$(REAL_EXE) #$(AUX_BIN)
 
 $(JZSYS_OBJ): %.o: %.c
 	@echo "Information: compile $@"

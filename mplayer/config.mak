@@ -643,6 +643,13 @@ ifeq ($(JZ4755_BSP),1)
 #CONFIG_VC1_DECODER=no
 XVID4 = yes
 endif
+
+ifeq ($(JZ4750_BSP),1)
+#CONFIG_WMV3_DECODER=no
+#CONFIG_VC1_DECODER=no
+XVID4 = yes
+endif
+
 #----------------------------------------------
 
 

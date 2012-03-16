@@ -37,7 +37,10 @@
  *  Use ./xvid_decraw -help for a list of options
  * 
  ****************************************************************************/
-
+#ifdef _UCOS_
+#include <mplaylib.h>
+#include "mplaylib.h"
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +49,7 @@
 #include <sys/time.h>
 #else
 #include <time.h>
+#endif
 #endif
 
 #include "xvid.h"
