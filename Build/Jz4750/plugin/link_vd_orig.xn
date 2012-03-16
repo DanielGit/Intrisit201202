@@ -21,7 +21,7 @@ OUTPUT_ARCH(mips)
 INCLUDE newsym.lds
 MEMORY
 {
-    ram  (wx) : ORIGIN = 0x803a2000, LENGTH = 610k
+    ram  (wx) : ORIGIN = 0x803a2000, LENGTH = 620k
     tcsm (wx) : ORIGIN = 0xF4002280, LENGTH = 8K
     h264_cavlc_tcsm (wx) : ORIGIN = 0xF4000000, LENGTH = 8K
     h264_cabac_tcsm (wx) : ORIGIN = 0xF4002000, LENGTH = 8K
