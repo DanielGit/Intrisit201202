@@ -423,6 +423,10 @@ int demux_avi_fill_buffer_ni(demuxer_t *demux,demux_stream_t* ds){
 	} while(ret!=1);
 	return 1;
 }
+
+#define MIN_INDEX_SIZE (4 * 1024)
+#define MAX_INDEX_SIZE (4 * 1024)
+
 static int generate_index(demuxer_t *demux)
 {
 	avi_priv_t *priv=demux->priv;
@@ -433,9 +437,9 @@ static int generate_index(demuxer_t *demux)
 	off_t fpos1=fpos;
 	AVIINDEXENTRY * idx;
 	if(priv->idx) free(priv->idx);
-	priv->idx = (AVIINDEXENTRY *)malloc(512 * 1024);
+	priv->idx = (AVIINDEXENTRY *)malloc(MIN_INDEX_SIZE);
 	int idxcount = 0;
-	int idxtotal = 512 * 1024 / sizeof(AVIINDEXENTRY);
+	int idxtotal = MIN_INDEX_SIZE / sizeof(AVIINDEXENTRY);
 	do{
 		//F("1\n");
 		fpos1 = stream_tell(demux->stream);
@@ -460,15 +464,18 @@ static int generate_index(demuxer_t *demux)
 			id=stream_read_dword_le(demux->stream);      // "AVIX"
 			continue;
 		}
-		if(idxtotal >= 7 * 1024 * 1024 / sizeof(AVIINDEXENTRY))
+		if(idxcount >= idxtotal) 
 		{
-			idxcount = 0;
-			break;
-		}else if(idxcount >= idxtotal)
-		{
-			idxtotal *= 2;
-			priv->idx = (AVIINDEXENTRY *)realloc(priv->idx,idxtotal * sizeof(AVIINDEXENTRY));
-		
+			if (idxcount >= MAX_INDEX_SIZE / sizeof(AVIINDEXENTRY))
+			{
+			  idxcount = 0;
+			  break;
+			}
+	    else
+		  {
+			  idxtotal *= 2;
+			  priv->idx = (AVIINDEXENTRY *)realloc(priv->idx,idxtotal * sizeof(AVIINDEXENTRY));
+			}
 		}
 		if(idxcount < idxtotal)
 		{
