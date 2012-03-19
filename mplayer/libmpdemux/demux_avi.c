@@ -447,7 +447,7 @@ static int generate_index(demuxer_t *demux)
 		id=stream_read_dword_le(demux->stream);
 		len=stream_read_dword_le(demux->stream);
 		//F("3\n");
-		if(stream_eof(demux->stream)) break;
+		if(stream_eof(demux->stream) || !len) break;
   
 		if(id==mmioFOURCC('L','I','S','T')){
 			id=stream_read_dword_le(demux->stream);      // list type
