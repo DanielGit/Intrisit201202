@@ -27,6 +27,17 @@ void *_vstart_mpegvideo ()
     *p++ = 0;
   
   first_avcodec = NULL;
+  
+  REGISTER_DECODER (THEORA, theora);
+  REGISTER_DECODER (VP3, vp3);
+  REGISTER_DECODER (VP5, vp5);
+  REGISTER_DECODER (VP6, vp6);
+  REGISTER_DECODER (VP6F, vp6f);
+  REGISTER_DECODER (VP6A, vp6a);
+  
+  REGISTER_DECODER  (RV10, rv10);
+  REGISTER_DECODER  (RV20, rv20);  
+  
   REGISTER_DECODER (MPEG1VIDEO, mpeg1video);
   REGISTER_DECODER (MPEG2VIDEO, mpeg2video);
   REGISTER_DECODER (MPEGVIDEO, mpegvideo);

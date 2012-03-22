@@ -54,7 +54,6 @@ void *_vstart_mpeg4 ()
 
   first_avcodec = NULL;
   REGISTER_DECODER  (MPEG4, mpeg4);
-  REGISTER_DECODER  (H263, h263);
   REGISTER_DECODER  (MSMPEG4V1, msmpeg4v1);
   REGISTER_DECODER  (MSMPEG4V2, msmpeg4v2);
   REGISTER_DECODER  (MSMPEG4V3, msmpeg4v3);
@@ -62,17 +61,9 @@ void *_vstart_mpeg4 ()
   REGISTER_DECODER  (WMV2, wmv2);
   REGISTER_DECODER  (WMV3, wmv3);
   REGISTER_DECODER  (VC1, vc1);
+  REGISTER_DECODER  (H263, h263);
   REGISTER_DECODER  (H263I, h263i);
   REGISTER_DECODER  (FLV, flv);
-  REGISTER_DECODER  (RV10, rv10);
-  REGISTER_DECODER  (RV20, rv20);
-
-  REGISTER_DECODER (THEORA, theora);
-  REGISTER_DECODER (VP3, vp3);
-  REGISTER_DECODER (VP5, vp5);
-  REGISTER_DECODER (VP6, vp6);
-  REGISTER_DECODER (VP6F, vp6f);
-  REGISTER_DECODER (VP6A, vp6a);
 
 // init ..._init funcp
   h264dsputil_init_funcp = h264dsputil_init;
