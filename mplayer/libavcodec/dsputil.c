@@ -3743,6 +3743,11 @@ void ff_set_cmp(DSPContext* c, me_cmp_func *cmp, int type){
     }
 }
 
+static void clear_block_c(DCTELEM *block)
+{
+    memset(block, 0, sizeof(DCTELEM)*64);
+}
+
 /**
  * memset(blocks, 0, sizeof(DCTELEM)*6*64)
  */
@@ -4280,6 +4285,91 @@ void ff_float_to_int16_c(int16_t *dst, const float *src, int len){
     }
 }
 
+#define W0 2048
+#define W1 2841 /* 2048*sqrt (2)*cos (1*pi/16) */
+#define W2 2676 /* 2048*sqrt (2)*cos (2*pi/16) */
+#define W3 2408 /* 2048*sqrt (2)*cos (3*pi/16) */
+#define W4 2048 /* 2048*sqrt (2)*cos (4*pi/16) */
+#define W5 1609 /* 2048*sqrt (2)*cos (5*pi/16) */
+#define W6 1108 /* 2048*sqrt (2)*cos (6*pi/16) */
+#define W7 565  /* 2048*sqrt (2)*cos (7*pi/16) */
+
+static void wmv2_idct_row(short * b)
+{
+    int s1,s2;
+    int a0,a1,a2,a3,a4,a5,a6,a7;
+    /*step 1*/
+    a1 = W1*b[1]+W7*b[7];
+    a7 = W7*b[1]-W1*b[7];
+    a5 = W5*b[5]+W3*b[3];
+    a3 = W3*b[5]-W5*b[3];
+    a2 = W2*b[2]+W6*b[6];
+    a6 = W6*b[2]-W2*b[6];
+    a0 = W0*b[0]+W0*b[4];
+    a4 = W0*b[0]-W0*b[4];
+    /*step 2*/
+    s1 = (181*(a1-a5+a7-a3)+128)>>8;//1,3,5,7,
+    s2 = (181*(a1-a5-a7+a3)+128)>>8;
+    /*step 3*/
+    b[0] = (a0+a2+a1+a5 + (1<<7))>>8;
+    b[1] = (a4+a6 +s1   + (1<<7))>>8;
+    b[2] = (a4-a6 +s2   + (1<<7))>>8;
+    b[3] = (a0-a2+a7+a3 + (1<<7))>>8;
+    b[4] = (a0-a2-a7-a3 + (1<<7))>>8;
+    b[5] = (a4-a6 -s2   + (1<<7))>>8;
+    b[6] = (a4+a6 -s1   + (1<<7))>>8;
+    b[7] = (a0+a2-a1-a5 + (1<<7))>>8;
+}
+static void wmv2_idct_col(short * b)
+{
+    int s1,s2;
+    int a0,a1,a2,a3,a4,a5,a6,a7;
+    /*step 1, with extended precision*/
+    a1 = (W1*b[8*1]+W7*b[8*7] + 4)>>3;
+    a7 = (W7*b[8*1]-W1*b[8*7] + 4)>>3;
+    a5 = (W5*b[8*5]+W3*b[8*3] + 4)>>3;
+    a3 = (W3*b[8*5]-W5*b[8*3] + 4)>>3;
+    a2 = (W2*b[8*2]+W6*b[8*6] + 4)>>3;
+    a6 = (W6*b[8*2]-W2*b[8*6] + 4)>>3;
+    a0 = (W0*b[8*0]+W0*b[8*4]    )>>3;
+    a4 = (W0*b[8*0]-W0*b[8*4]    )>>3;
+    /*step 2*/
+    s1 = (181*(a1-a5+a7-a3)+128)>>8;
+    s2 = (181*(a1-a5-a7+a3)+128)>>8;
+    /*step 3*/
+    b[8*0] = (a0+a2+a1+a5 + (1<<13))>>14;
+    b[8*1] = (a4+a6 +s1   + (1<<13))>>14;
+    b[8*2] = (a4-a6 +s2   + (1<<13))>>14;
+    b[8*3] = (a0-a2+a7+a3 + (1<<13))>>14;
+
+    b[8*4] = (a0-a2-a7-a3 + (1<<13))>>14;
+    b[8*5] = (a4-a6 -s2   + (1<<13))>>14;
+    b[8*6] = (a4+a6 -s1   + (1<<13))>>14;
+    b[8*7] = (a0+a2-a1-a5 + (1<<13))>>14;
+}
+void ff_wmv2_idct_c(short * block){
+    int i;
+
+    for(i=0;i<64;i+=8){
+        wmv2_idct_row(block+i);
+    }
+    for(i=0;i<8;i++){
+        wmv2_idct_col(block+i);
+    }
+}
+/* XXX: those functions should be suppressed ASAP when all IDCTs are
+ converted */
+static void ff_wmv2_idct_put_c(uint8_t *dest, int line_size, DCTELEM *block)
+{
+    ff_wmv2_idct_c(block);
+    put_pixels_clamped_c(block, dest, line_size);
+}
+static void ff_wmv2_idct_add_c(uint8_t *dest, int line_size, DCTELEM *block)
+{
+    ff_wmv2_idct_c(block);
+    add_pixels_clamped_c(block, dest, line_size);
+}
+
 /* XXX: those functions should be suppressed ASAP when all IDCTs are
  converted */
 static void ff_jref_idct_put(uint8_t *dest, int line_size, DCTELEM *block)
@@ -4737,6 +4827,11 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
             c->idct    = ff_vp3_idct_c;
 #endif
             c->idct_permutation_type= FF_NO_IDCT_PERM;
+        }else if(avctx->idct_algo==FF_IDCT_WMV2){
+            c->idct_put= ff_wmv2_idct_put_c;
+            c->idct_add= ff_wmv2_idct_add_c;
+            c->idct    = ff_wmv2_idct_c;
+            c->idct_permutation_type= FF_NO_IDCT_PERM;            
         }else{ //accurate/default
             c->idct_put= simple_idct_put;
             c->idct_add= simple_idct_add;
@@ -4792,6 +4887,7 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->sum_abs_dctelem = sum_abs_dctelem_c;
     c->gmc1 = gmc1_c;
     c->gmc = ff_gmc_c;
+    c->clear_block = clear_block_c;
     c->clear_blocks = clear_blocks_c;
     c->pix_sum = pix_sum_c;
     c->pix_norm1 = pix_norm1_c;
@@ -4866,6 +4962,11 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     ff_vc1dsp_init(c,avctx);
 #endif
 #endif
+
+#if CONFIG_WMV2_DECODER
+    ff_intrax8dsp_init(c,avctx);
+#endif
+
 #if defined(CONFIG_H264_ENCODER)
     ff_h264dspenc_init(c,avctx);
 #endif

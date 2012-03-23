@@ -624,13 +624,22 @@ retry:
 #endif
 
     ff_er_frame_start(s);
-
+#if 0
     //the second part of the wmv2 header contains the MB skip bits which are stored in current_picture->mb_type
     //which is not available before MPV_frame_start()
     if (s->msmpeg4_version==5){
         if(!ENABLE_WMV2_DECODER || ff_wmv2_decode_secondary_picture_header(s) < 0)
             return -1;
     }
+#else
+    //the second part of the wmv2 header contains the MB skip bits which are stored in current_picture->mb_type
+    //which is not available before MPV_frame_start()
+    if (CONFIG_WMV2_DECODER && s->msmpeg4_version==5){
+        ret = ff_wmv2_decode_secondary_picture_header(s);
+        if(ret<0) return ret;
+        if(ret==1) goto intrax8_decoded;
+    }
+#endif    
 
     /* decode each macroblock */
     s->mb_x=0;
@@ -686,6 +695,8 @@ retry:
         }
     }
 
+intrax8_decoded:
+	
     ff_er_frame_end(s);
 
     MPV_frame_end(s);

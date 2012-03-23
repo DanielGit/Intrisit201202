@@ -196,10 +196,20 @@ typedef struct DSPContext {
 
     me_cmp_func me_pre_cmp[5];
     me_cmp_func me_cmp[5];
-    me_cmp_func me_sub_cmp[5];
-    me_cmp_func mb_cmp[5];
-    me_cmp_func ildct_cmp[5]; //only width 16 used
+#if 0    
+    me_cmp_func me_sub_cmp[5];    
+    me_cmp_func mb_cmp[5];     
+    me_cmp_func ildct_cmp[5]; //only width 16 used   
     me_cmp_func frame_skip_cmp[5]; //only width 8 used
+#else    
+    /* intrax8 functions */
+    void (*x8_spatial_compensation[16])(uint8_t *src , uint8_t *dst, int linesize);
+    void (*x8_setup_spatial_compensation)(uint8_t *src, uint8_t *dst, int linesize,
+           int * range, int * sum,  int edges);
+    void (*x8_v_loop_filter)(uint8_t *src, int stride, int qscale);
+    void (*x8_h_loop_filter)(uint8_t *src, int stride, int qscale);    
+    void (*clear_block)(DCTELEM *block/*align 16*/);        
+#endif    
 
     int (*ssd_int8_vs_int16)(const int8_t *pix1, const int16_t *pix2,
                              int size);
