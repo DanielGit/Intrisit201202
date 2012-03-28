@@ -22,6 +22,7 @@
 #include "opt.h"
 #include "avstring.h"
 #include "riff.h"
+#include "../av_plugin.h"
 #include <sys/time.h>
 #include <time.h>
 
@@ -1760,7 +1761,7 @@ static int get_std_framerate(int i){
 
 int av_find_stream_info(AVFormatContext *ic)
 {
-    int i, count, ret, read_size, j;
+    int i, count, ret, read_size, j, load_plg;
     AVStream *st;
     AVPacket pkt1, *pkt;
     int64_t last_dts[MAX_STREAMS];
@@ -1799,6 +1800,7 @@ int av_find_stream_info(AVFormatContext *ic)
     memset(probe_data, 0, sizeof(probe_data));
     count = 0;
     read_size = 0;
+    load_plg = 0;
     for(;;) {
         /* check if one codec still needs to be handled */
         for(i=0;i<ic->nb_streams;i++) {
@@ -1928,8 +1930,14 @@ int av_find_stream_info(AVFormatContext *ic)
              st->codec->codec_id == CODEC_ID_PPM ||
              st->codec->codec_id == CODEC_ID_SHORTEN ||
              (st->codec->codec_id == CODEC_ID_MPEG4 && !st->need_parsing))*/)
+        {
+        	if (!st->codec->codec && st->codec->codec_id > 0)
+        	{
+        		load_plugin_codec_id (st->codec->codec_id, 1, 0);
+        		load_plg = 1;
+        	}
             try_decode_frame(st, pkt->data, pkt->size);
-
+        }
         if (st->time_base.den > 0 && av_rescale_q(codec_info_duration[st->index], st->time_base, AV_TIME_BASE_Q) >= ic->max_analyze_duration) {
             break;
         }
@@ -1941,6 +1949,10 @@ int av_find_stream_info(AVFormatContext *ic)
         st = ic->streams[i];
         if(st->codec->codec)
             avcodec_close(st->codec);
+    }
+    if (load_plg)
+    {
+    	load_plugin ("table", CODEC_TABLE_NAME, 0, FFMPEG_PLUGIN_TABLE);
     }
     for(i=0;i<ic->nb_streams;i++) {
         st = ic->streams[i];

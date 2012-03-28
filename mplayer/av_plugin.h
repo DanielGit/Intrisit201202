@@ -11,6 +11,9 @@ struct AV_PLUGIN_TBL
 {
   char *name;
   char *plugin_name;
-  char av_mix;
+  unsigned int codec_id;
 };
+
+extern void *load_plugin_codec_id (int codec_id, char video_plg, unsigned int arg0);
+extern void *load_plugin (char *drv_name, char *dll_name, char video_plg, unsigned int arg0);
 

@@ -3655,7 +3655,6 @@ void SetMPlayerQuit( void )
 
 #ifdef USE_16M_SDRAM
 #include "av_plugin.h"
-void *load_plugin (char *drv_name, char *dll_name, char video_plg, unsigned int arg0);
 #endif
 
 #ifdef JZ4750_OPT
@@ -5279,8 +5278,26 @@ struct AV_PLUGIN_TBL
 		return NULL;
 	while (p->name)
 	{
-		printf("%s %s\n",dll_name,p->name);
+		kprintf("name: %s %s\n",dll_name,p->name);
 		if (!strcmp(dll_name, p->name))
+			break;
+		p++;
+	}
+	return p;
+}
+
+struct AV_PLUGIN_TBL 
+*search_ffmpeg_plugin_codec_id (codec_id)
+{
+	struct AV_PLUGIN_TBL *p;
+	p = ffmpeg_plugin_search_table;
+	printf("ffmpeg_plugin_search_table = %x\n",ffmpeg_plugin_search_table);
+	if (!p)
+		return NULL;
+	while (p->name)
+	{
+		kprintf("code_id: %d %s\n", codec_id, p->name);
+		if (codec_id == p->codec_id)
 			break;
 		p++;
 	}
@@ -5318,6 +5335,85 @@ void *load_plugin (char *drv_name, char *dll_name, char video_plg, unsigned int 
 		filename = drv_name;
 		prefix = (video_plg) ? vd_prefix : ad_prefix;
 	}
+
+    // open plugin mpcodes_vd/ad_...
+#if 1
+    buf_len = strlen (prefix) + strlen(filename) + 8;
+#else
+    buf_len = strlen("nfl:\\SYSTEM\\") + strlen (prefix) + strlen(filename) + 8;
+#endif
+    buf = malloc(buf_len);
+    if (!buf)
+    {
+		printf ("++++++++ ERR: alloc memory failed(%s): size = %d  +++++++++\n", filename, buf_len);
+		return NULL; //while (1);
+    }
+       
+#if 1
+    sprintf(buf, "%s%s.bin", prefix, filename);
+#else
+    sprintf(buf, "nfl:\\SYSTEM\\%s%s", prefix, filename);
+#endif
+
+	noah_kprintf ("+++ buf = %s ++++\n", buf);
+
+#if 1
+#ifdef NOAH_OS
+    if (video_plg)
+    	ret = (void *)Load_Program(0, buf, (void *)arg0, NULL);
+    else
+    	ret = (void *)Load_Program(1, buf, (void *)arg0, NULL);
+#else
+    ret = (void *)Load_Program(buf, (void *)arg0, NULL);
+#endif    
+    free(buf);
+    return ret;
+#else
+	FILE *fp;
+	void* (*func)(unsigned int);
+	char *progaddr;
+	int size;
+
+	if (video_plg)   // video plugin
+		progaddr = (void *)(VD_PLUGIN_ADDR);
+	else
+		progaddr = (void *)(AD_PLUGIN_ADDR);
+
+    fp = fopen (buf, "rb");
+    if (fp == NULL)
+    {
+		printf ("++++++++ ERR: can not open file: %s  +++++++++\n", buf);
+		free(buf);
+		return; // while (1);
+    }
+    free(buf);
+    // load the plugin
+    size = fread (progaddr, 1, fp->size, fp);
+    __dcache_writeback_all();
+    __icache_invalidate_all();
+
+    // execute the plugin start function
+    func = (void *)progaddr;
+    return func (arg0);   // init
+#endif
+}
+
+void *load_plugin_codec_id (int codec_id, char video_plg, unsigned int arg0)
+{
+	struct AV_PLUGIN_TBL *p;
+	int buf_len;
+	char *buf, *filename, *prefix;
+	char *vd_prefix="mpcodecs_vd_", *ad_prefix="mpcodecs_ad_";
+	void *ret;
+	
+	p = search_ffmpeg_plugin_codec_id (codec_id);
+	if (!p || !p->plugin_name)
+	{
+			printf ("+++++++ Not found plugin for codec_id: %d ++++++++\n", codec_id);
+			return NULL;
+	}
+  filename = p->plugin_name;
+  prefix = "";
 
     // open plugin mpcodes_vd/ad_...
 #if 1
