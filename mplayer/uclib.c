@@ -27,7 +27,7 @@ static char *mp_memory = NULL;
 static unsigned int mp_memory_size = 0;
 unsigned int mp_memory_empty = 0;
 
-#define MEM_STAT    1 
+#define MEM_STAT    0 
 #if MEM_STAT
 #undef printf
 static char *old_memory = NULL;

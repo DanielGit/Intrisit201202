@@ -216,16 +216,21 @@ static int demux_avi_read_packet(demuxer_t *demux,demux_stream_t *ds,unsigned in
 				--priv->skip_video_frames;
 				ds=NULL;
 			}
-			if(ds)
-                ++priv->video_pack_no;
+
 			pts = priv->avi_video_pts = (float)(priv->video_pack_no) * per_frametime;
 			
+
+			if(ds)
+                ++priv->video_pack_no;
+                			
 		//	printf("pts = %f %f %f\n",pts,per_frametime);
+#if 0		// Don't update ds->pts since it will update in ds_fill_buffer
 			if(ds)
 			{	
 				sh_video_t *sh_video = ds->sh;
 				ds->pts = pts;
 			}
+#endif			
 			priv->avi_audio_pts=priv->avi_video_pts+priv->pts_correction;
 			priv->pts_has_video=1;
 		 

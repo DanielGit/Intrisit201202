@@ -28,7 +28,7 @@
 
 #define DAC_SAMPLE_RATIO		48000
 #define FILTER_PCMBUF_SIZE		(1024*2)
-#define MAX_PCMBUFS			32
+#define MAX_PCMBUFS			16
 
 #define WAOLA_PCM_BUF_SIZE		(FILTER_PCMBUF_SIZE * 4)
 
@@ -85,6 +85,11 @@ static int  fPause;
 static RESAMPLE DacDevice __attribute__((aligned(32)));		//存放DMA数据链
 static short NullBuf[DAC_PCMBUF_SIZE/sizeof(short)];
 static DWORD nErrorData = 0;	//出现越界的数据个数
+
+extern DWORD nMplayerDelay;
+extern DWORD nMplayerSamplerate;
+extern DWORD nMplayerChannels;
+extern DWORD nMplayerDmaStart;
 
 extern void SetMuteMode(char mode);
 extern void MediaDraveInit(char channel);
@@ -297,6 +302,7 @@ static void StartDmaPcmTrans(int mute, unsigned int sour)
 	{	
 		//传送PCM数据
 		DmaDataToAic(0,(unsigned int)sour, DAC_PCMBUF_SIZE,1);
+		nMplayerDmaStart = 1;
 #ifdef DAC_SAVE_PCM
 		kmemcpy(&dac_buf[dac_offset],(BYTE*)sour,DAC_PCMBUF_SIZE);
 		dac_offset += DAC_PCMBUF_SIZE;
@@ -308,6 +314,7 @@ static void StartDmaPcmTrans(int mute, unsigned int sour)
 	{	
 		//传送空的数据
 		DmaDataToAic(0, (unsigned int)NullBuf, DAC_PCMBUF_SIZE,1);
+		nMplayerDmaStart = 0;
 #ifdef DAC_SAVE_PCM
 		kmemcpy(&dac_buf[dac_offset],(BYTE*)NullBuf,DAC_PCMBUF_SIZE);
 		dac_offset += DAC_PCMBUF_SIZE;
@@ -401,14 +408,14 @@ static void DacWriteThread(DWORD p)
 		if( play_flag == 0 )
 		{
 			kMutexRelease(hDacMutex);
-			sTimerSleep(20, NULL);
+			sTimerSleep(10, NULL);
 			continue;
 		}
 
 		if(i == chs )
 		{
 			kMutexRelease(hDacMutex);
-			sTimerSleep(20, NULL);
+			sTimerSleep(10, NULL);
 			continue;
 		}
 
@@ -639,7 +646,8 @@ int DacInit(void)
 	SetMoseCe(0);
 
 	//D类功放开机去喀嚓音的特殊处理
-#if defined(CONFIG_MAC_BDS6100) || defined(CONFIG_MAC_ND800) || defined(CONFIG_MAC_ASKMI1388) || defined(CONFIG_MAC_BDS6100A) || defined(CONFIG_MAC_NP7000) || defined( CONFIG_MAC_NP2300 )
+#if defined(CONFIG_MAC_BDS6100) || defined(CONFIG_MAC_ND800) || defined(CONFIG_MAC_ASKMI1388) || defined(CONFIG_MAC_BDS6100A) || defined(CONFIG_MAC_NP7000) \
+	|| defined( CONFIG_MAC_NP2300 ) || defined(CONFIG_MAC_NP5800) || defined(CONFIG_MAC_NP6800)
 	SetPowerAmplifier(1);
 	SetPowerAmplifier(0);
 #else
@@ -717,7 +725,9 @@ HANDLE DacOpen(void)
 
 		SetMoseCe(1);
 #else
+#if !defined(CONFIG_MAC_NP5800) && !defined(CONFIG_MAC_NP6800)
 		SetPowerAmplifier(1);
+#endif
 #endif
 		// 打开DA设备
 		DacDeviceOpen();
@@ -735,16 +745,24 @@ HANDLE DacOpen(void)
 
 		//只有第一次打开声音设备才需要去掉BOBO音
 #if defined(CONFIG_MAC_NP7000) || defined(CONFIG_MAC_NP2300)
-		MillinsecoundDelay(250);
-
+		//MillinsecoundDelay(250);
+		sTimerSleep(250, 0);
 		SetPowerAmplifier(1);
 #else
-		MillinsecoundDelay(120);
+		//MillinsecoundDelay(120);
+		sTimerSleep(120, 0);
 
 		SetMoseCe(1);
 
+#if defined(CONFIG_MAC_NP5800) || defined(CONFIG_MAC_NP6800)
+		//MillinsecoundDelay(100);
+		sTimerSleep(100, 0);
+		SetPowerAmplifier(1);
+		//MillinsecoundDelay(30);
+		sTimerSleep(30, 0);
+#else
 		MillinsecoundDelay(130);
-
+#endif
 		SetMuteMode(1);
 #endif
 	}
@@ -780,14 +798,14 @@ int DacClose(HANDLE hdac)
 		ListRemove(&dac->Link);
 		if(ListEmpty(&DacList))
 		{
-			MillinsecoundDelay(20);
+			//MillinsecoundDelay(20);
 
 			SetMuteMode(0);
 
 			//关闭功放
 			SetPowerAmplifier(0);
 
-			MillinsecoundDelay(20);
+			//MillinsecoundDelay(20);
 
 			SetMoseCe(0);
 
@@ -798,7 +816,7 @@ int DacClose(HANDLE hdac)
 			DacDeviceClose();
 
 			// 没有这个耳机会有爆破音.
-			MillinsecoundDelay(20);
+			//MillinsecoundDelay(20);
 		}
 
 		DacDestorySamplerate(dac);	//释放resample数据
@@ -1015,7 +1033,7 @@ int DacWrite(HANDLE hdac, short *src, int len)
 
 	if( start_flag == 0 && dac->fThreadStart == 1 )
 	{
-		kprintf("dac write sleep\n");
+		//kprintf("dac write sleep\n");
 		sTimerSleep(20, NULL);
 	}
 	return len_bak;
@@ -1542,7 +1560,7 @@ int GetDacChannel(void)
 // 返回: 
 // 说明: 
 ////////////////////////////////////////////////////
-int GetDacBufCount()
+int GetDacSpaceCount()
 {
 	int i;
 	int len;
@@ -1550,16 +1568,8 @@ int GetDacBufCount()
 	PDAC_DEVICE dac;
 	PRESAMPLE presample;
 
+	kMutexWait(hDacMutex);
 	len = 0;
-	presample = &DacDevice;
-	for( i = 0 ; i < MAX_PCMBUFS ; i++ )
-	{
-		if( presample->BufFlag[i] == DAC_BUF_READ )
-			len +=DAC_PCMBUF_SIZE;
-		else if( presample->BufFlag[i] == DAC_BUF_READING )
-			len += GetDmaCount();
-	}
-
 	head = &DacList;
 	if( head )
 	{
@@ -1568,14 +1578,55 @@ int GetDacBufCount()
 		if( dac )
 		{
 			presample = &dac->Resample;
+	
 			for( i = 0 ; i < MAX_PCMBUFS ; i++ )
 			{
-				if( presample->BufFlag[i] == DAC_BUF_READ )
+				if( presample->BufFlag[i] == DAC_BUF_WRITE )
+				{
 					len +=DAC_PCMBUF_SIZE;
+				}
 			}
 		}
 	}
 
+	presample = &DacDevice;
+	for( i = 0 ; i < MAX_PCMBUFS ; i++ )
+	{
+		if( presample->BufFlag[i] == DAC_BUF_WRITE )
+			len +=DAC_PCMBUF_SIZE;
+	}
+	
+	kMutexRelease(hDacMutex);
+	len = ((long long)len * nMplayerSamplerate * nMplayerChannels * 2) / (DAC_SAMPLE_RATIO * 2 * 2);
+	len = len & (~3);
+	return len;
+}
+
+////////////////////////////////////////////////////
+// 功能: 得到BUF里剩余数据的时间
+// 输入: 
+// 输出:
+// 返回: 
+// 说明: 
+////////////////////////////////////////////////////
+int GetDacBufCount()
+{
+	int len,num;
+
+DWORD s; 
+InterruptSave(&s);
+InterruptDisable();
+
+	if( nMplayerDmaStart )
+		num = GetDmaCount() * 16;
+	else
+		num = DAC_PCMBUF_SIZE;
+ 	
+	if( nMplayerDelay >= (DAC_PCMBUF_SIZE - num))
+		len = nMplayerDelay - (DAC_PCMBUF_SIZE - num);
+	else
+		len = nMplayerDelay;		
+InterruptRestore(s);		
 	return ( (len*1000) / (DAC_SAMPLE_RATIO*2*2) );
 }
 
@@ -1645,6 +1696,23 @@ static void DacWaiteDmaEnd()
 }
 
 ////////////////////////////////////////////////////
+// 功能: 设置视频的显示位置以及大小
+// 输入: 
+// 输出:
+// 返回: 
+// 说明: 
+////////////////////////////////////////////////////
+void GetMplayerResampleSize(DWORD len)
+{
+DWORD s; 
+InterruptSave(&s);
+InterruptDisable();	
+
+	nMplayerDelay += ((long long)len * DAC_SAMPLE_RATIO * 2 * 2) / (nMplayerSamplerate * nMplayerChannels * 2);
+
+InterruptRestore(s);	
+}
+////////////////////////////////////////////////////
 // 功能: 测试程序
 // 输入: 
 // 输出:
@@ -1658,7 +1726,7 @@ void DacClearPcmData()
 	//判断是否存在播放设备
 	if( ListEmpty(&DacList) )
 	{
-		kdebug(mod_audio, PRINT_WARNING, "dac list is null\n");
+		//kdebug(mod_audio, PRINT_WARNING, "dac list is null\n");
 		return;
 	}
 
@@ -1688,6 +1756,9 @@ void DacClearPcmData()
 					presample->BufFlag[presample->ReadBuf] = DAC_BUF_READING;
 					break;
 				case DAC_BUF_READING:
+					if( nMplayerDelay >= DAC_PCMBUF_SIZE )
+						nMplayerDelay -= DAC_PCMBUF_SIZE;
+
 					presample->BufFlag[presample->ReadBuf] = DAC_BUF_WRITE;
 					if(++presample->ReadBuf == MAX_PCMBUFS )
 						presample->ReadBuf = 0;

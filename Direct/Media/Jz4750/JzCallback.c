@@ -40,10 +40,14 @@
 
 extern BYTE* pMediaPcmData;
 extern DWORD nMediaPcmLen;
+extern DWORD nMplayerDmaStart;
+
 extern void ClockDelay(DWORD usec);
 extern BYTE* LcdcVideoOsdBuf(void);
 extern void SetMplayerEnd(void);
 extern int GetDacBufCount();
+extern int GetDacSpaceCount();
+extern void GetMplayerResampleSize(DWORD len);
 
 extern void __icache_invalidate_all(void);
 extern void __dcache_writeback_all(void);
@@ -575,7 +579,8 @@ static void AkCbOpenVideoOsd(int w, int h)
 ////////////////////////////////////////////////////
 static int os_audio_get_space()
 {
-	return MplayerAudioSpace;
+	return GetDacSpaceCount();
+//	return MplayerAudioSpace;
 }
 
 ////////////////////////////////////////////////////
@@ -597,8 +602,9 @@ static int null_func ()
 // ·µ»Ø:
 // ËµÃ÷:
 ////////////////////////////////////////////////////
-static int return_func_1()
+static int return_func_init()
 {
+	nMplayerDmaStart = 0;
 	return 1;
 }
 
@@ -642,6 +648,7 @@ static int os_audio_play(void* data,int len,int flags)
 #if defined(CONFIG_MPLAYER_ENABLE) && !defined(CONFIG_MAKE_BIOS)
 	kmemcpy((BYTE*)pMediaPcmData,(BYTE*)data,len);
 	nMediaPcmLen = len;
+	GetMplayerResampleSize(len);
 	if(flags)
 		nMediaPcmLen |= 0x80000000;
 	return len;
@@ -846,7 +853,7 @@ void AkCbInit(PJz47_AV_Decoder cb, PAK_OBJECT obj)
 	cb->os_msleep  = (void *)AkCbDelay;	//sTimerSleep;
 	
 	// audio playing functions
-	cb->os_audio_init =   (void *)return_func_1;			/* int init(int rate,int channels,int format,int flags), return 1 if succes, else return 0.*/
+	cb->os_audio_init =   (void *)return_func_init;			/* int init(int rate,int channels,int format,int flags), return 1 if succes, else return 0.*/
 	cb->os_audio_uninit = (void *)null_func;				/* void uninit(int immed) */
 	cb->os_audio_reset =  (void *)null_func;				/* void reset(void) */
 	cb->os_audio_pause =  (void *)null_func;				/* void audio_pause(void) */

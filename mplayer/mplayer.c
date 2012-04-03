@@ -2461,10 +2461,10 @@ static int fill_audio_out_buffers(int pre_dec_count)
   int dec_audio_size;
   sh_audio_t* sh_audio = mpctx->sh_audio;
   int dec_audio_time = GetTimer();	
-
+/*
   if (!ipu_image_completed && mpctx->sh_video)
     return 1;
-		
+*/		
   current_module="play_audio";
   // wait the buffer has space to write
   while (1) 
@@ -2481,7 +2481,7 @@ static int fill_audio_out_buffers(int pre_dec_count)
 		// handle audio-only case:
 		// this is where mplayer sleeps during audio-only playback
 		// to avoid 100% CPU use
-		usec_sleep(50000); // Wait a tick before retry
+		usec_sleep(2000); // Wait a tick before retry
   }
     
   dec_audio_size = bytes_to_write;
@@ -2667,7 +2667,7 @@ static int sleep_until_update(float *time_frame, float *aq_sleep_time)
 	
 		//if (delay > 0.25) delay=0.25; else
 		//if (delay < 0.10) delay=0.10;
-		if (*time_frame > delay*0.6) 
+		if (*time_frame > delay*0.6 && mpctx->delay > 0) 
 		{
 			// sleep time too big - may cause audio drops (buffer underrun)
 			frame_time_remaining = 1;
@@ -2769,7 +2769,7 @@ int reinit_video_chain(void) {
 }
 
 int dropped_frames = 0;
-extern int (*AV_presync)(float frame_time);
+extern int AVdrop_presync (float frame_time);
 
 #ifdef USE_IPU_THROUGH_MODE
 unsigned int disp_buf0 = 0, disp_buf1 = 0;
@@ -3046,8 +3046,6 @@ decode_video:
 
 #else
 	sh_video_t * const sh_video = mpctx->sh_video;
-	static int drop_after_framecount = 0;
-
 #if MP_STATISTIC
 	volatile int av_v_dec_time_t;
 #endif	
@@ -3082,20 +3080,10 @@ decode_video:
 				float delay = mpctx->audio_out->get_delay();
 				float d = delay-mpctx->delay;
 
-				if((d < -0.10) && (drop_after_framecount > 3))
-				{
-					drop_frame = 1;
-				}
-
-
-				if(AV_presync)
-					av_drop = AV_presync(frame_time);
-
+					av_drop = AVdrop_presync(frame_time);
 			}
 			if(av_drop == 1)
 			{
-				drop_frame = 0;
-				drop_after_framecount = -3;
 
 				mpctx->delay -= frame_time;
 				float f = ds_fill_keyframe_buffer(sh_video->ds);
@@ -3105,7 +3093,7 @@ decode_video:
 				demuxer_set_drop_image();		   
 				in_size = video_read_frame(sh_video, &sh_video->next_frame_time,
 						&start, force_fps);
-				av_drop = AV_presync(frame_time);
+				av_drop = AVdrop_presync(frame_time);
 			}else if(av_drop == 2)
 			{
 
@@ -3247,9 +3235,8 @@ decode_video:
 
 				*blit_frame = filter_video(sh_video, decoded_frame,
 						sh_video->pts);
+			}
 
-				drop_after_framecount++;
-			}else if(drop_frame == 1) drop_after_framecount = 0;
 
 
 #endif

@@ -790,6 +790,9 @@ int GetMplayerVideoDataLib()
 		PlayerStatus = MEDIALIB_END;
 		return PLAY_FINISH_ERR;
 	}
+	
+	if (mpctx->sh_video->next_frame_time > 0.001 && mpctx->audio_out->get_delay() <= mpctx->sh_video->next_frame_time)
+		return (int)(mpctx->sh_video->pts*1000);
 
     /*========================== PLAY VIDEO ============================*/
 	vo_pts=mpctx->sh_video->timer*90000.0;

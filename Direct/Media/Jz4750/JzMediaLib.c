@@ -28,21 +28,40 @@
 #endif 
 
 //设置最大的视频播放尺寸
-#if defined(CONFIG_MAC_ND800) || defined(CONFIG_MAC_BDS7100) || defined(CONFIG_MAC_ASKMI1388)
-#define HEIGHT_DEFINITION_MOVIE_W	640		//高清电影(xvid,realvid,h264)播放的最大尺寸
+#if defined(CONFIG_MCU_JZ4750) || defined(CONFIG_MCU_JZ4755)
+#define WMV_DEFINITION_MOVIE_W		640			//WMV1，WMV2的限制尺寸
+#define WMV_DEFINITION_MOVIE_H		480
+#define FLV_DEFINITION_MOVIE_W		640			//FLV的限制尺寸
+#define FLV_DEFINITION_MOVIE_H		480
+#define DV_DEFINITION_MOVIE_W		640			//DV的限制尺寸
+#define DV_DEFINITION_MOVIE_H		480
+#define H263_DEFINITION_MOVIE_W		800			//h263的限制尺寸
+#define H263_DEFINITION_MOVIE_H		480
+#define HEIGHT_DEFINITION_MOVIE_W	800			//高清视频的限制尺寸
 #define HEIGHT_DEFINITION_MOVIE_H	480
-#define NORMAL_DEFINITION_MOVIE_W	800		//正常电影播放的最大尺寸
-#define NORMAL_DEFINITION_MOVIE_H	640
+#define NORMAL_DEFINITION_MOVIE_W	800			//普通视频的限制尺寸
+#define NORMAL_DEFINITION_MOVIE_H	480
 #else
-#define HEIGHT_DEFINITION_MOVIE_W	800
-#define HEIGHT_DEFINITION_MOVIE_H	640
-#define NORMAL_DEFINITION_MOVIE_W	1280
-#define NORMAL_DEFINITION_MOVIE_H	720
+#define WMV_DEFINITION_MOVIE_W		640			//WMV1，WMV2的限制尺寸
+#define WMV_DEFINITION_MOVIE_H		480
+#define FLV_DEFINITION_MOVIE_W		640			//FLV的限制尺寸
+#define FLV_DEFINITION_MOVIE_H		480
+#define DV_DEFINITION_MOVIE_W		640			//DV的限制尺寸
+#define DV_DEFINITION_MOVIE_H		480
+#define H263_DEFINITION_MOVIE_W		640			//h263的限制尺寸
+#define H263_DEFINITION_MOVIE_H		480
+#define HEIGHT_DEFINITION_MOVIE_W	640			//高清视频的限制尺寸
+#define HEIGHT_DEFINITION_MOVIE_H	480
+#define NORMAL_DEFINITION_MOVIE_W	640			//普通视频的限制尺寸
+#define NORMAL_DEFINITION_MOVIE_H	480
 #endif
 
 
 extern BYTE* pMediaPcmData;
 extern DWORD nMediaPcmLen;
+extern DWORD nMplayerSamplerate;
+extern DWORD nMplayerChannels;
+
 extern BYTE _end_mplayer_data;
 extern BYTE _start_mplayer_data;
 extern BYTE _end_mplayer_sbss;
@@ -363,6 +382,9 @@ int MediaLibClose(PAK_OBJECT obj)
 ////////////////////////////////////////////////////
 int MediaLibGetInfo(PAK_OBJECT obj)
 {
+#if defined(CONFIG_MPLAYER_ENABLE) && !defined(CONFIG_MAKE_BIOS)
+	int flag;
+#endif
 	PAK_VFILE vfile;
 	PINNER_PLAYER_DRV pDevice;
 
@@ -412,29 +434,50 @@ int MediaLibGetInfo(PAK_OBJECT obj)
 		kdebug(mod_media, PRINT_INFO, "VideoCodec = %s\n",obj->JzAvDecoder->VideoCodec);
 		kdebug(mod_media, PRINT_INFO, "=======================================================================\n");
 
+		//初始化mplayer变量
+		nMplayerSamplerate = obj->Info.AudioSamplerate;
+		nMplayerChannels   = obj->Info.AudioChannels;
+
+		flag = 0;
 		if( obj->Info.bHasVideo )
 		{	//存在视频，判断视频播放尺寸是否大于1080x720，如果大于，则不进行播放，防止内存不足，导致各种情况的死机
-			if( kstrcmp(obj->JzAvDecoder->VideoCodec,"xvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"realvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"h264") == 0 )
+			if( kstrcmp(obj->JzAvDecoder->VideoCodec, "ffwmv1") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec, "ffwmv2") == 0)
+			{	//wmv1,wmv2软解，wmv3硬解
+				if( obj->Info.VideoHeight > WMV_DEFINITION_MOVIE_H || obj->Info.VideoWidth > WMV_DEFINITION_MOVIE_W )
+					flag = 1;
+			}
+			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"xvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"realvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"h264") == 0 )
 			{
 				if( obj->Info.VideoHeight > HEIGHT_DEFINITION_MOVIE_H || obj->Info.VideoWidth > HEIGHT_DEFINITION_MOVIE_W )
-				{
-					kdebug(mod_media, PRINT_ERROR, "VideoCodec = %s\n",obj->JzAvDecoder->VideoCodec);
-					kdebug(mod_media, PRINT_ERROR, "video widht = %d, height = %d\n",obj->Info.VideoWidth,obj->Info.VideoHeight);
-					kdebug(mod_media, PRINT_ERROR, "vido is to large can't play\n");
-					return -1;
-				}
-
+					flag = 1;
+			}
+			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"ffflv") == 0  )
+			{
+				if( obj->Info.VideoHeight > FLV_DEFINITION_MOVIE_H || obj->Info.VideoWidth > FLV_DEFINITION_MOVIE_W )
+					flag = 1;
+			}
+			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"dv") == 0  )
+			{
+				if( obj->Info.VideoHeight > DV_DEFINITION_MOVIE_H || obj->Info.VideoWidth > DV_DEFINITION_MOVIE_W )
+					flag = 1;
+			}
+			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"ffh263") == 0  )
+			{
+				if( obj->Info.VideoHeight > H263_DEFINITION_MOVIE_H || obj->Info.VideoWidth > H263_DEFINITION_MOVIE_W )
+					flag = 1;
 			}
 			else
 			{
 				if( obj->Info.VideoHeight > NORMAL_DEFINITION_MOVIE_H || obj->Info.VideoWidth > NORMAL_DEFINITION_MOVIE_W )
-				{
-					kdebug(mod_media, PRINT_ERROR, "VideoCodec = %s\n",obj->JzAvDecoder->VideoCodec);
-					kdebug(mod_media, PRINT_ERROR, "video widht = %d, height = %d\n",obj->Info.VideoWidth,obj->Info.VideoHeight);
-					kdebug(mod_media, PRINT_ERROR, "vido is to large can't play\n");
-					return -1;
-				}
+					flag = 1;
 			}
+		}
+		if( flag )
+		{
+			kdebug(mod_audio, PRINT_ERROR,  "VideoCodec = %s\n",obj->JzAvDecoder->VideoCodec);
+			kdebug(mod_audio, PRINT_ERROR,  "video widht = %d, height = %d\n",obj->Info.VideoWidth,obj->Info.VideoHeight);
+			kdebug(mod_audio, PRINT_ERROR,  "vido is to large can't play\n");
+			return -1;
 		}
 		SetMplayerAudioSpace(obj);
 		obj->Info.MediaType = 1;
@@ -840,3 +883,4 @@ int MplayerResizeVideo(PAK_OBJECT obj,PMEDIA_TASK task)
 #endif
 	return 0;
 }
+

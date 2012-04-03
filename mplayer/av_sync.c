@@ -38,11 +38,7 @@ extern MPContext *mpctx;
 
 
 //#undef printf
-#ifdef __LINUX__
-int AV_presync(float frame_time)
-#else
-int AV_presync_dym_length (float frame_time)
-#endif
+int AVdrop_presync (float frame_time)
 {
 		if(mpctx->eof) return;
 		sh_video_t * const sh_video = mpctx->sh_video;
@@ -124,6 +120,6 @@ int AV_presync_dym_length (float frame_time)
 }
 
 #ifndef __LINUX__
-int (*AV_presync)(float frame_time) = AV_presync_dym_length;
+//int (*AV_presync)(float frame_time) = AV_presync_dym_length;
 #endif
 

@@ -68,8 +68,8 @@ static int read_frame(sh_audio_t *sh)
 	int len;
 
 	len=demux_read_data(sh->ds,&sh->a_in_buffer[sh->a_in_buffer_len], sh->a_in_buffer_size-sh->a_in_buffer_len);
-	F("len = %d",len);
-	F("sh->a_in_buffer_len = %d",sh->a_in_buffer_len);
+	//F("len = %d",len);
+	//F("sh->a_in_buffer_len = %d",sh->a_in_buffer_len);
 
 	while( len >0 )
 	{
@@ -98,11 +98,11 @@ static int read_frame(sh_audio_t *sh)
 		len=demux_read_data(sh->ds,&sh->a_in_buffer[sh->a_in_buffer_len], sh->a_in_buffer_size-sh->a_in_buffer_len);
 	}
 
-	F("len = %d",len);
+//	F("len = %d",len);
 	if( len == 0 )
 	{
-		F("len = 0,package program");
-		F("sh->a_in_buffer_len = %d",sh->a_in_buffer_len);
+	//	F("len = 0,package program");
+	//	F("sh->a_in_buffer_len = %d",sh->a_in_buffer_len);
 		while(sh->a_in_buffer_len > 0)
 		{
 			int ret;
@@ -181,16 +181,16 @@ static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen)
 	mad_decoder_t *this = (mad_decoder_t *) sh->context;
 	int len=0;
 
-	F("1");
+	//F("1");
 	while(len<minlen && len+4608<=maxlen)
 	{
 		this->have_frame = read_frame(sh);
 		if(!this->have_frame)
 			break;
 
-		F("3");
+		//F("3");
 		mad_synth_frame (&this->synth, &this->frame);
-		F("4");
+		//F("4");
 
 		{ 
 			unsigned int         nchannels, nsamples;
@@ -218,7 +218,7 @@ static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen)
 		}
 	}
 
-	F("2");
+	//F("2");
 	return len?len:-1;
 }
 
