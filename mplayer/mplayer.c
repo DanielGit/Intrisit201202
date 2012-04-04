@@ -805,8 +805,8 @@ int mplayer_seekabstime(int f)
 #ifndef NOAH_OS            
             os_SemaphoreSet(mp_sem_seek, 0, &err);
             os_SemaphorePend(mp_sem_seek,100,&err);
-#endif      
 		  if(err != 0) 
+#endif		  	
 		  {
 			  v_video_seektime = get_video_pts();
 			  return 0;
@@ -3277,7 +3277,9 @@ decode_video:
 	}
 
 #if !DEBUG_WAIT_IPU_END
-	ipu_polling_end ();
+#ifdef JZ4755_OPT
+	ipu_polling_end (); 
+#endif	
 #else
 	wait_ipu_end = 1;
 #endif
