@@ -1087,7 +1087,7 @@ static void initmplayer()
 	seek_start=0;
 
     // A/V sync:
-	autosync=0; // 30 might be a good default value.
+	//autosync=0; // 30 might be a good default value.
 
     // may be changed by GUI:  (FIXME!)
 	rel_seek_secs=0;

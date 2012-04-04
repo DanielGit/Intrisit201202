@@ -37,6 +37,9 @@ static int generate_index(demuxer_t *demux);
 // PTS:  0=interleaved  1=BPS-based
 int pts_from_bps=1;
 
+static unsigned int skip_to_keyframe = 0;
+static int skip_to_keyframe_idxpos;
+
 // Select ds from ID
 demux_stream_t* demux_avi_select_stream(demuxer_t *demux,unsigned int id){
 	int stream_id=avi_stream_id(id);
@@ -124,6 +127,10 @@ static int FindNextKeyFrameIdx(demuxer_t * demux)
 	int m_cur_skip_keyframe = cur_skip_keyframe;
 	AVIINDEXENTRY *idx=NULL;
 	int count = 0;
+	if (skip_to_keyframe)
+	{
+		idxpos = skip_to_keyframe_idxpos;
+	}	
 	//F("++++\n");
 	while(idxpos < idx_size)
 	{		
@@ -155,6 +162,10 @@ static int FindSkipKeyFrameTime(demuxer_t * demux,int time)
 	int id = demux->video->id;
 	int frametime = 0;
 	//F("+++++\n");
+	if (skip_to_keyframe)
+	{
+		idxpos = skip_to_keyframe_idxpos;
+	}	
 	while(idxpos < idx_size){
 		idx = GetIndex(demux,idxpos);
 		idxpos++;
@@ -173,9 +184,6 @@ static int FindSkipKeyFrameTime(demuxer_t * demux,int time)
 	//F("-----\n");
 	return skip_keyframe_count;
 }
-
-static unsigned int skip_to_keyframe = 0;
-
 
 static int demux_avi_read_packet(demuxer_t *demux,demux_stream_t *ds,unsigned int id,unsigned int len,int idxpos,int flags){
 	avi_priv_t *priv=demux->priv;
@@ -1080,6 +1088,7 @@ static int demux_avi_control(demuxer_t *demuxer,int cmd, void *arg){
 //		return DEMUXER_CTRL_OK;
    
 	case DEMUXER_CTRL_SKIP_TOKEYFRAME:
+		skip_to_keyframe_idxpos = priv->idx_pos;
 		skip_to_keyframe = 1;
 		return 1;
 	case DEMUXER_CTRL_IS_KEYFRAME:
