@@ -40,7 +40,7 @@ extern MPContext *mpctx;
 //#undef printf
 int AVdrop_presync (float frame_time)
 {
-		if(mpctx->eof) return;
+		if(mpctx->eof) return 0;
 		sh_video_t * const sh_video = mpctx->sh_video;
 		demux_stream_t *d_video=sh_video->ds;
 		//if(d_video->packs == 0)

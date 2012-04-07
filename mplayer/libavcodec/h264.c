@@ -8317,8 +8317,14 @@ static int decode_frame(AVCodecContext *avctx,
             execute_ref_pic_marking(h, h->mmco, h->mmco_index);
         }
 
-        ff_er_frame_end(s);
-
+        if ((avctx->skip_frame != AVDISCARD_NONKEY)
+            || (s->pict_type == I_TYPE && (avctx->skip_frame == AVDISCARD_NONKEY)))
+        {
+          ff_er_frame_end(s);
+          if (avctx->skip_frame == AVDISCARD_NONKEY)
+            avctx->skip_frame = AVDISCARD_DEFAULT;
+        }
+        
         MPV_frame_end(s);
 
 #ifdef JZC_CRC_VER

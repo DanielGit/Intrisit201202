@@ -172,6 +172,12 @@ static int control(sh_video_t *sh,int cmd,void* arg,...){
         return CONTROL_FALSE;
         }
     break;
+    case VDCTRL_GET_SKIP_FRAMES:
+      *(int *)arg = avctx->skip_frame;
+    break;
+    case VDCTRL_SET_SKIP_FRAMES:
+      avctx->skip_frame = *(int *)arg ;
+    break;	    
     case VDCTRL_RESYNC_STREAM:
         avcodec_flush_buffers(avctx);
 	return CONTROL_TRUE;

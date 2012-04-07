@@ -25,6 +25,8 @@ extern int vd_use_slices;
 #define VDCTRL_GET_EQUALIZER 7 /* get color options (brightness,contrast etc) */
 #define VDCTRL_RESYNC_STREAM 8 /* seeking */
 #define VDCTRL_QUERY_UNSEEN_FRAMES 9 /* current decoder lag */
+#define VDCTRL_GET_SKIP_FRAMES 10 /*  get avctx->skip_frame */
+#define VDCTRL_SET_SKIP_FRAMES 11 /* set avctx->skip_frame */
 
 // callbacks:
 int mpcodecs_config_vo(sh_video_t *sh, int w, int h, unsigned int preferred_outfmt);

@@ -182,6 +182,8 @@ static int max_framesize=0;
 #include "libmpcodecs/vf.h"
 #include "libmpcodecs/vd.h"
 
+#include "libavcodec/avcodec.h"
+
 #include "mixer.h"
 
 #include "mp_core.h"
@@ -192,6 +194,7 @@ float a52_drc_level = 1.0;
 #endif
 
 extern void noah_kprintf(const char *format, ... );
+extern vd_functions_t* mpvdec;
 
 //**************************************************************************//
 //**************************************************************************//
@@ -967,7 +970,7 @@ void init_tcsm1()
 #define DEBUG_FRAME_DECODE_TIME		1
 int decode_audio_time = 0;
 int decode_video_time = 0;
-int decode_total_frame = 0;
+static int decode_total_frame = 0;
 extern DWORD _OSClockTick;
 #define profile_clock_tick	((volatile DWORD)_OSClockTick)
 
@@ -3052,6 +3055,7 @@ decode_video:
 	//--------------------  Decode a frame: -----------------------
 	double frame_time = 0.0;
 	*blit_frame = 0; // Don't blit if we hit EOF
+  demuxer_t *demux = mpctx->demuxer;
 	//printf("correct_pts = %f\n",(float)correct_pts);
 #if DEBUG_FRAME_DECODE_TIME
 	int tmp;
@@ -3094,7 +3098,7 @@ decode_video:
 				in_size = video_read_frame(sh_video, &sh_video->next_frame_time,
 						&start, force_fps);
 				av_drop = AVdrop_presync(frame_time);
-			}else if(av_drop == 2)
+			}/*else if(av_drop == 2)
 			{
 
 				in_size = video_read_frame(sh_video, &sh_video->next_frame_time,
@@ -3103,7 +3107,7 @@ decode_video:
 				drop_image();
 				demuxer_set_drop_image();	
 				av_drop = 0;
-			}
+			}*/
 
 		}
 		else
@@ -3174,9 +3178,37 @@ decode_video:
 #if MP_STATISTIC
 			av_v_dec_time_t = GetTimer();
 #endif
+      if(demux->video->packs>=(MAX_PACKS - MAX_PACKS/10) || demux->video->bytes>=(MAX_PACK_BYTES - MAX_PACK_BYTES/10))
+      {
+      	int skipframes, val, val2;
+      	mpvdec->control(sh_video, VDCTRL_GET_SKIP_FRAMES, &skipframes);
+      	val = AVDISCARD_NONKEY;
+      	mpvdec->control(sh_video, VDCTRL_SET_SKIP_FRAMES, &val);
+      	val2 = -128;
+        do 
+        {
+          decoded_frame = decode_video(sh_video, start, in_size, 1, sh_video->pts);
+          mpvdec->control(sh_video, VDCTRL_GET_SKIP_FRAMES, &val2);
+          if (val != val2)
+          {
+            if (val2 == -128)
+              break;
+            if ((demux->video->packs >= MAX_PACKS / 2) || (demux->video->bytes >= MAX_PACK_BYTES / 2))
+              mpvdec->control(sh_video, VDCTRL_SET_SKIP_FRAMES, &val);
+            else
+              break;
+          }
 
-			decoded_frame = decode_video(sh_video, start, in_size, drop_frame,
-					sh_video->pts);
+          in_size = video_read_frame(sh_video, &sh_video->next_frame_time, &start, force_fps);
+          if (mpctx->sh_audio)
+            mpctx->delay -= sh_video->next_frame_time;				  
+        } while (1);
+        
+        mpvdec->control(sh_video, VDCTRL_SET_SKIP_FRAMES, &skipframes);
+      }
+      else
+        decoded_frame = decode_video(sh_video, start, in_size, drop_frame,
+                                     sh_video->pts);
 
 #if DEBUG_WAIT_IPU_END
 			if(wait_ipu_end == 1)
