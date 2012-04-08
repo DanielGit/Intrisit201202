@@ -14,10 +14,10 @@ LIBDIR = $(DESTDIR)/usr/local/lib
 libdir = $(LIBDIR)
 AR = /noahos/ToolChain/gcc-mips/bin/noahos-ar
 LD = /noahos/ToolChain/gcc-mips/bin/noahos-ld
-CC = /noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32 -O4 -mno-abicalls -fno-pic -fno-builtin \
+CC = /noahos/ToolChain/gcc-mips/bin/noahos-gcc -mips32 -O2 -mno-abicalls -fno-pic -fno-builtin \
 	   -fno-exceptions -ffunction-sections -falign-functions=32 -finline-functions\
 	   -fshort-wchar -fomit-frame-pointer -ffast-math -msoft-float -G 0 -Wall
-CXX = /noahos/ToolChain/gcc-mips/bin/noahos-g++ -mips32 -O4 -mno-abicalls -fno-pic -fno-builtin \
+CXX = /noahos/ToolChain/gcc-mips/bin/noahos-g++ -mips32 -O2 -mno-abicalls -fno-pic -fno-builtin \
 	   -fno-exceptions -ffunction-sections -falign-functions=32\
 	   -fshort-wchar -fomit-frame-pointer -ffast-math -msoft-float -G 0 -Wall
 
