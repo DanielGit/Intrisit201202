@@ -265,7 +265,8 @@ static int parse_index_chunk(demuxer_t *demuxer)
     int origpos = stream_tell(demuxer->stream);
     int next_header_pos = priv->index_chunk_offset;
     int i, entries, stream_id;
-#ifdef JZ47_OPT
+    
+#if 0 //#ifdef JZ47_OPT
     if (verify_index_chunk (demuxer))
     	kprintf ("+++ verify index chunk passed ! \n");
     else
