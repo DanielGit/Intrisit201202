@@ -41,7 +41,7 @@ ifeq ($(JZ4755_BSP), 1)
 SCALE_DEVICE = jz47_soc.c jzsoc/linux/jz47_soc_rsize.c
 endif
 ifeq ($(JZ4725_BSP), 1)
-SCALE_DEVICE = jz4755_soc.c
+SCALE_DEVICE = jz47_soc.c jzsoc/linux/jz47_soc_rsize.c
 endif
 
 ifeq ($(NOAH_OS), 1)
@@ -87,6 +87,9 @@ COMMON_LIBS-yes                   += jzcodecs/JZ4755/libvc1/libvc1dec.a
 COMMON_LIBS-yes                   += jzcodecs/JZ4755/libxvid.113/libxvidcore.a
 else ifeq ($(JZ4750_BSP),1)
 COMMON_LIBS-$(LIBMPEG2)           += libmpeg2/libmpeg2.a
+COMMON_LIBS-yes                   += jzcodecs/JZ4750/libxvid/libxvidcore.a
+else ifeq ($(JZ4725_BSP),1)
+COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
 COMMON_LIBS-yes                   += jzcodecs/JZ4750/libxvid/libxvidcore.a
 else
 COMMON_LIBS-$(LIBMPEG2)           += libmpeg2_jz4740/libmpeg2.a
@@ -299,7 +302,7 @@ ifeq ($(JZ4755_BSP),1)
 	$(CP) jzsoc/minios/codecs/JZ4755/*.bin ./LIBS/codecs
 else	
 ifeq ($(JZ4725_BSP),1)
-	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4755/*.a /noahos/UsrLib/libout/JZ4750L/
+	$(CP) $@ $(LIBS_MPLAYER) $(COMMON_LIBS) jzsoc/minios/LIBS/av_sync.a jzsoc/minios/LIBS/JZ4750/*.a ../UsrLib/libout/JZ4750L/
 else
 ifeq ($(JZ4750_BSP),1)
 	mkdir -p ../UsrLib/libout/JZ4750
