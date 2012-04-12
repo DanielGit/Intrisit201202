@@ -30,7 +30,7 @@
 #define RECORD_FADE		400
 #else
 #if defined(CONFIG_MAC_NP5800) || defined(CONFIG_MAC_NP6800)
-#define RECORD_FADE		100		//CODEC一直开的状态，可以减少FADE时间
+#define RECORD_FADE		400		//CODEC一直开的状态，可以减少FADE时间
 #else
 #define RECORD_FADE		400
 #endif
@@ -96,7 +96,7 @@ DWORD nMplayerDelay = 0;		//保存当前mplayer的剩余数据
 DWORD nMplayerSamplerate = 0;	//保存当前当前mplayer的波特率
 DWORD nMplayerChannels = 0;		//保存当前当前mplayer的声道数
 DWORD nMplayerDmaStart = 0;		//保存当前DMA是否开始传送mplayer数据标记
-static DWORD nMplayerAudioStart = 0;	//AUDIO开始标记
+DWORD nMplayerAudioStart = 0;	//AUDIO开始标记
 ////////////////////////////////////////////////////
 // 功能: 
 // 输入: 
@@ -188,8 +188,6 @@ static void AkThreadVideoPlay(DWORD p)
 	DWORD delay_time;
 	DWORD totle_time;
 	DWORD totle_fps;
-	DWORD back_time;
-	DWORD back_count;
 	RECT *show_rect;
 	int pts;
 	int pass_frame;
@@ -219,8 +217,10 @@ static void AkThreadVideoPlay(DWORD p)
 			sTimerSleep(10, NULL);
 			continue;
 		}
+
 		if( nMplayerAudioStart == 1 )
 			nMplayerAudioStart = 2;
+
 		// 获取音频时间	
 		audio_time = obj->RecDuration;
 		
@@ -231,13 +231,10 @@ static void AkThreadVideoPlay(DWORD p)
 			pts  = MediaLibGetYuv(obj);
 			totle_time += TimerCount() - tick;
 			totle_fps++;
-			
-			if( nMplayerAudioStart == 2 )
-			{
-				nMplayerAudioStart = 3;
-				
-			}
 		}
+
+		if( nMplayerAudioStart == 2 )
+			nMplayerAudioStart = 3;
 		
 //		kprintf("%d,%d\n",pts,audio_time);
 		if(pts < 0)
@@ -338,6 +335,7 @@ static void JzThreadPlayFile(DWORD p)
  	int obj_del = 1;
 	int wlen;
 	int block_num;
+	int	time_out;
 	DWORD init_start_time,init_end_time;
 
 #ifdef MPLAYER_PRINTF_ENABEL
@@ -609,18 +607,16 @@ static void JzThreadPlayFile(DWORD p)
 		if(video.hMutex)
 			kMutexRelease(video.hMutex);
 
-		if( nMplayerAudioStart == 0 && video.hMutex )
+		if( nMplayerAudioStart == 0 && video.hMutex)
 		{
+			time_out = 100;
 			nMplayerAudioStart = 1;
-			while(nMplayerAudioStart != 3)
+			while( nMplayerAudioStart != 3 && time_out--)
 				sTimerSleep(10,NULL);
+			if( !time_out )
+				kprintf("!!!!!!!! WARNNING : wait video time out !!!!!!!!\n");
 			nMplayerAudioStart = 4;
 		}
-//		//开始播放时，wlen = 0,此时需要VIDEO线程运行，同时给AUDIO解锁
-// 		if( wlen == 0 && obj->Info.bHasVideo )
-// 			sTimerSleep(20, NULL);
-// 		if(GetDacBufCountMs() > 200 && obj->Info.bHasVideo )
-// 			sTimerSleep(40, NULL);
 
 		// 输出音频数据到DA
 		pData = pcm;

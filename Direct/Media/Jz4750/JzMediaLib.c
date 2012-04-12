@@ -28,15 +28,32 @@
 #endif 
 
 //设置最大的视频播放尺寸
-#if defined(CONFIG_MCU_JZ4750) || defined(CONFIG_MCU_JZ4755)
+#if defined(CONFIG_MCU_JZ4755)
 #define WMV_DEFINITION_MOVIE_W		640			//WMV1，WMV2的限制尺寸
 #define WMV_DEFINITION_MOVIE_H		480
-#define FLV_DEFINITION_MOVIE_W		640			//FLV的限制尺寸
-#define FLV_DEFINITION_MOVIE_H		480
+#define FLV_DEFINITION_MOVIE_W		720			//FLV的限制尺寸
+#define FLV_DEFINITION_MOVIE_H		576
 #define DV_DEFINITION_MOVIE_W		640			//DV的限制尺寸
 #define DV_DEFINITION_MOVIE_H		480
 #define H263_DEFINITION_MOVIE_W		800			//h263的限制尺寸
 #define H263_DEFINITION_MOVIE_H		480
+#define H264_DEFINITION_MOVIE_W		800			//h264的限制尺寸
+#define H264_DEFINITION_MOVIE_H		480
+#define HEIGHT_DEFINITION_MOVIE_W	800			//高清视频的限制尺寸
+#define HEIGHT_DEFINITION_MOVIE_H	480
+#define NORMAL_DEFINITION_MOVIE_W	800			//普通视频的限制尺寸
+#define NORMAL_DEFINITION_MOVIE_H	480
+#elif defined(CONFIG_MCU_JZ4750)
+#define WMV_DEFINITION_MOVIE_W		640			//WMV1，WMV2的限制尺寸
+#define WMV_DEFINITION_MOVIE_H		480
+#define FLV_DEFINITION_MOVIE_W		720			//FLV的限制尺寸
+#define FLV_DEFINITION_MOVIE_H		576
+#define DV_DEFINITION_MOVIE_W		640			//DV的限制尺寸
+#define DV_DEFINITION_MOVIE_H		480
+#define H263_DEFINITION_MOVIE_W		800			//h263的限制尺寸
+#define H263_DEFINITION_MOVIE_H		480
+#define H264_DEFINITION_MOVIE_W		800			//h264的限制尺寸
+#define H264_DEFINITION_MOVIE_H		480
 #define HEIGHT_DEFINITION_MOVIE_W	800			//高清视频的限制尺寸
 #define HEIGHT_DEFINITION_MOVIE_H	480
 #define NORMAL_DEFINITION_MOVIE_W	800			//普通视频的限制尺寸
@@ -50,6 +67,8 @@
 #define DV_DEFINITION_MOVIE_H		480
 #define H263_DEFINITION_MOVIE_W		640			//h263的限制尺寸
 #define H263_DEFINITION_MOVIE_H		480
+#define H264_DEFINITION_MOVIE_W		640			//h264的限制尺寸
+#define H264_DEFINITION_MOVIE_H		480
 #define HEIGHT_DEFINITION_MOVIE_W	640			//高清视频的限制尺寸
 #define HEIGHT_DEFINITION_MOVIE_H	480
 #define NORMAL_DEFINITION_MOVIE_W	640			//普通视频的限制尺寸
@@ -61,6 +80,7 @@ extern BYTE* pMediaPcmData;
 extern DWORD nMediaPcmLen;
 extern DWORD nMplayerSamplerate;
 extern DWORD nMplayerChannels;
+extern DWORD nMplayerDmaStart;
 
 extern BYTE _end_mplayer_data;
 extern BYTE _start_mplayer_data;
@@ -437,6 +457,7 @@ int MediaLibGetInfo(PAK_OBJECT obj)
 		//初始化mplayer变量
 		nMplayerSamplerate = obj->Info.AudioSamplerate;
 		nMplayerChannels   = obj->Info.AudioChannels;
+		nMplayerDmaStart   = 0;
 
 		flag = 0;
 		if( obj->Info.bHasVideo )
@@ -449,6 +470,11 @@ int MediaLibGetInfo(PAK_OBJECT obj)
 			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"xvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"realvid") == 0 || kstrcmp(obj->JzAvDecoder->VideoCodec,"h264") == 0 )
 			{
 				if( obj->Info.VideoHeight > HEIGHT_DEFINITION_MOVIE_H || obj->Info.VideoWidth > HEIGHT_DEFINITION_MOVIE_W )
+					flag = 1;
+			}
+			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"ffh264") == 0  )
+			{
+				if( obj->Info.VideoHeight > H264_DEFINITION_MOVIE_H || obj->Info.VideoWidth > H264_DEFINITION_MOVIE_W )
 					flag = 1;
 			}
 			else if( kstrcmp(obj->JzAvDecoder->VideoCodec,"ffflv") == 0  )

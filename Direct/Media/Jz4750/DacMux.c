@@ -18,6 +18,7 @@
 #include <kernel/timer.h>
 #include <kernel/sched.h>
 #include <kernel/callback.h>
+#include <direct/media.h>
 #include <direct/medialib/resample.h>
 
 #if defined(CONFIG_MAC_BDS6100) || defined(CONFIG_MAC_ND800) || defined(CONFIG_MAC_ASKMI1388) || defined(CONFIG_MAC_BDS6100A)
@@ -90,6 +91,7 @@ extern DWORD nMplayerDelay;
 extern DWORD nMplayerSamplerate;
 extern DWORD nMplayerChannels;
 extern DWORD nMplayerDmaStart;
+extern DWORD nMplayerAudioStart;
 
 extern void SetMuteMode(char mode);
 extern void MediaDraveInit(char channel);
@@ -111,6 +113,9 @@ extern DWORD GetDmaCount();
 extern int GetDacChannel();
 extern void MediaSysInit();
 extern void MillinsecoundDelay(unsigned int msec);
+extern void InterruptDisable(void);
+extern void InterruptSave(DWORD *sts);
+extern void InterruptRestore(DWORD sts);
 static void DacWaiteDmaEnd();
 
 extern int DacGetGloalVolume();
@@ -614,6 +619,7 @@ static void DacHeadphoneClose(void)
 int DacInit(void)
 {
 	int i;
+	
 	// 全局变量初始化
 	hDacMutex = kMutexCreate();
 	hDacSema = kSemaCreate(0);
@@ -653,6 +659,9 @@ int DacInit(void)
 #else
 	SetPowerAmplifier(0);
 #endif
+#if defined(CODEC_ALWAYS_OPEN)
+	MediaDraveInit(1);	//如果是CODEC一直开启模式，则初始化时打开CODEC
+#endif
 	return 0;
 }
 
@@ -670,7 +679,7 @@ HANDLE DacOpen(void)
 	PLIST n;
 	int open_devs;
 	int i;
-
+ 
 	// 获取打开设备数量
 	kMutexWait(hDacMutex);
 	head = &DacList;
@@ -1448,7 +1457,7 @@ int DacSetSamplerate(HANDLE hdac, int samprate, int chs)
 	if(dac == NULL)
 		return -1;
 
-	if((samprate != 8000) && (samprate != 11025) && 
+	if((samprate != 8000) && (samprate != 11025) && (samprate != 12000) && 
 			(samprate != 16000) && (samprate != 22050) && 
 			(samprate != 24000) && (samprate != 32000) && 
 			(samprate != 44100) && (samprate != 48000))
@@ -1578,27 +1587,24 @@ int GetDacSpaceCount()
 		if( dac )
 		{
 			presample = &dac->Resample;
-	
 			for( i = 0 ; i < MAX_PCMBUFS ; i++ )
 			{
 				if( presample->BufFlag[i] == DAC_BUF_WRITE )
-				{
 					len +=DAC_PCMBUF_SIZE;
-				}
 			}
 		}
 	}
-
+	
 	presample = &DacDevice;
 	for( i = 0 ; i < MAX_PCMBUFS ; i++ )
 	{
 		if( presample->BufFlag[i] == DAC_BUF_WRITE )
 			len +=DAC_PCMBUF_SIZE;
 	}
-	
 	kMutexRelease(hDacMutex);
+
 	len = ((long long)len * nMplayerSamplerate * nMplayerChannels * 2) / (DAC_SAMPLE_RATIO * 2 * 2);
-	len = len & (~3);
+	len = len & (~0x03);
 	return len;
 }
 
@@ -1612,21 +1618,22 @@ int GetDacSpaceCount()
 int GetDacBufCount()
 {
 	int len,num;
+	DWORD s;
 
-DWORD s; 
-InterruptSave(&s);
-InterruptDisable();
+	InterruptSave(&s);
+	InterruptDisable();
 
 	if( nMplayerDmaStart )
-		num = GetDmaCount() * 16;
+		num = GetDmaCount();
 	else
 		num = DAC_PCMBUF_SIZE;
- 	
+
 	if( nMplayerDelay >= (DAC_PCMBUF_SIZE - num))
 		len = nMplayerDelay - (DAC_PCMBUF_SIZE - num);
 	else
-		len = nMplayerDelay;		
-InterruptRestore(s);		
+		len = nMplayerDelay;
+
+	InterruptRestore(s);
 	return ( (len*1000) / (DAC_SAMPLE_RATIO*2*2) );
 }
 
@@ -1704,13 +1711,24 @@ static void DacWaiteDmaEnd()
 ////////////////////////////////////////////////////
 void GetMplayerResampleSize(DWORD len)
 {
-DWORD s; 
-InterruptSave(&s);
-InterruptDisable();	
-
 	nMplayerDelay += ((long long)len * DAC_SAMPLE_RATIO * 2 * 2) / (nMplayerSamplerate * nMplayerChannels * 2);
+}
 
-InterruptRestore(s);	
+////////////////////////////////////////////////////
+// 功能: 等待DMA结束
+// 输入: 
+// 输出:
+// 返回: 
+// 说明: 
+////////////////////////////////////////////////////
+void MplayerWaiteDmaEnd()
+{
+	DWORD time;
+
+	time = 5000000;
+	while( (nMplayerDelay >= DAC_PCMBUF_SIZE) && time)
+		time--;
+	return;
 }
 ////////////////////////////////////////////////////
 // 功能: 测试程序

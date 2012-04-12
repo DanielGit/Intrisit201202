@@ -40,6 +40,7 @@
 
 extern BYTE* pMediaPcmData;
 extern DWORD nMediaPcmLen;
+extern DWORD nMplayerDelay;
 extern DWORD nMplayerDmaStart;
 
 extern void ClockDelay(DWORD usec);
@@ -48,6 +49,7 @@ extern void SetMplayerEnd(void);
 extern int GetDacBufCount();
 extern int GetDacSpaceCount();
 extern void GetMplayerResampleSize(DWORD len);
+extern void MplayerWaiteDmaEnd();
 
 extern void __icache_invalidate_all(void);
 extern void __dcache_writeback_all(void);
@@ -580,7 +582,6 @@ static void AkCbOpenVideoOsd(int w, int h)
 static int os_audio_get_space()
 {
 	return GetDacSpaceCount();
-//	return MplayerAudioSpace;
 }
 
 ////////////////////////////////////////////////////
@@ -602,10 +603,10 @@ static int null_func ()
 // 返回:
 // 说明:
 ////////////////////////////////////////////////////
-static int return_func_init()
+static int return_func_1()
 {
-	nMplayerDmaStart = 0;
 	return 1;
+	return_func_1();
 }
 
 ////////////////////////////////////////////////////
@@ -618,6 +619,19 @@ static int return_func_init()
 static int return_func_ff()
 {
 	return -1;
+}
+
+////////////////////////////////////////////////////
+// 功能:
+// 输入:
+// 输出:
+// 返回:
+// 说明:
+////////////////////////////////////////////////////
+static int os_audio_init()
+{
+	nMplayerDmaStart = 0;
+	return 1;
 }
 
 ////////////////////////////////////////////////////
@@ -655,6 +669,19 @@ static int os_audio_play(void* data,int len,int flags)
 #else
 	return 0;
 #endif	
+}
+
+////////////////////////////////////////////////////
+// 功能:
+// 输入:
+// 输出:
+// 返回:
+// 说明:
+////////////////////////////////////////////////////
+static void os_audio_resume()
+{
+	MplayerWaiteDmaEnd();
+	nMplayerDelay = 0;
 }
 
 ////////////////////////////////////////////////////
@@ -853,11 +880,11 @@ void AkCbInit(PJz47_AV_Decoder cb, PAK_OBJECT obj)
 	cb->os_msleep  = (void *)AkCbDelay;	//sTimerSleep;
 	
 	// audio playing functions
-	cb->os_audio_init =   (void *)return_func_init;			/* int init(int rate,int channels,int format,int flags), return 1 if succes, else return 0.*/
+	cb->os_audio_init =   (void *)os_audio_init;			/* int init(int rate,int channels,int format,int flags), return 1 if succes, else return 0.*/
 	cb->os_audio_uninit = (void *)null_func;				/* void uninit(int immed) */
 	cb->os_audio_reset =  (void *)null_func;				/* void reset(void) */
 	cb->os_audio_pause =  (void *)null_func;				/* void audio_pause(void) */
-	cb->os_audio_resume = (void *)null_func;				/* void audio_resume(void) */
+	cb->os_audio_resume = (void *)os_audio_resume;			/* void audio_resume(void) */
 	cb->os_audio_get_space = (void *)os_audio_get_space;	/* int get_space(void) */
 	cb->os_audio_play =  (void *)os_audio_play;				/* int play(void* data,int len,int flags), flags = 1 is end chunk */
 	cb->os_audio_get_delay = (void *)os_audio_get_delay;	/* float get_delay(void) */

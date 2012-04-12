@@ -35,9 +35,6 @@
 #endif
 
 
-#if defined(CONFIG_MAC_NP7000)  || defined(CONFIG_MAC_NP2300)
-#define CODEC_ALWAYS_OPEN
-#endif
 //#define KPRINTF_DEF
 
 #define RGADW_ADDR_BIT		( 8 )
@@ -49,6 +46,7 @@
 #define PHYADDR(n)			(unsigned int)((n) & 0x1fffffff)
 #define PHYSADDR(x)			(((unsigned int)x) & 0x1fffffff)
 
+#if defined(CONFIG_MCU_JZ4750L) || defined(CONFIG_MCU_JZ4755)
 #define INREG8(x)           ( (unsigned char)(*(volatile unsigned char * const)(x)) )
 #define OUTREG8(x, y)       *(volatile unsigned char * const)(x) = (y)
 #define SETREG8(x, y)       OUTREG8(x, INREG8(x)|(y))
@@ -63,6 +61,7 @@
 #define OUTREG32(x, y)       *(volatile unsigned int * const)(x) = (y)
 #define SETREG32(x, y)      OUTREG32(x, INREG32(x)|(y))
 #define CLRREG32(x, y)      OUTREG32(x, INREG32(x)&~(y))
+#endif
 
 #define PCM_DATA_FINISH		1
 #define PCM_SET_SAMPLE_RATE	2
@@ -125,6 +124,10 @@ extern void __dcache_inv(unsigned long addr, unsigned long size);
 static DWORD interrupt_count;
 static BYTE  fDeviceStatus = DEVICE_CLOSE_STATUS;
 void GetDmaInfo();
+
+extern void BootGpioSet(DWORD pin, int in);
+extern int BootGpioIn(DWORD pin);
+extern void BootGpioOut(DWORD pin, int data);
 ////////////////////////////////////////////////////
 // 功能: 延迟N个豪秒
 // 输入: 
@@ -190,7 +193,7 @@ static void dma_start(unsigned int channel, unsigned int srcAddr, unsigned int d
 ////////////////////////////////////////////////////
 DWORD GetDmaCount()
 {
-	return INREG32(A_DMA_DTC(PLAYBACK_CHANNEL));
+	return (REG_DMAC_DTCR(PLAYBACK_CHANNEL) & 0x0ffffff) * 16;
 }
 
 ////////////////////////////////////////////////////
@@ -611,7 +614,7 @@ int pcm_ioctl(unsigned int cmd, unsigned long arg)
 					for (JumpCoun = 0; JumpCoun <=  data; JumpCoun++)
 					{
 						set_volume_reg(JumpCoun);
-						MillinsecoundDelay(10);
+						//MillinsecoundDelay(10);
 					}
 				}
 				else
@@ -760,24 +763,37 @@ void SetPowerAmplifier(char io)
 		io = 0;
 #endif
 
-#if defined(CONFIG_AMP_IO)
-	__gpio_as_output(CONFIG_AMP_IO);
-	if(io)
-	{
-#if CONFIG_AMP_ENA
-		__gpio_set_pin(CONFIG_AMP_IO);
-#else
-		__gpio_clear_pin(CONFIG_AMP_IO);
-#endif		
+#if defined(CONFIG_AMP_CE2_IO)
+	//存在2个功放
+	BootGpioSet(CONFIG_AMP_CE2_IO,0);
+	BootGpioSet(CONFIG_AMP_IO,0);
+	if( io )
+	{	//打开功放
+		if( BootGpioIn(CONFIG_PALM_DETECT_IO) == CONFIG_PALM_IN )
+		{	//掌机插入状态,大功放开启，小功放关闭
+			BootGpioOut(CONFIG_AMP_CE2_IO, CONFIG_AMP_CE2_ENA);
+			BootGpioOut(CONFIG_AMP_IO, CONFIG_AMP_DIS);
+		}
+		else
+		{	//掌机拔出状态,大功放关闭，小功放开启
+			BootGpioOut(CONFIG_AMP_CE2_IO, CONFIG_AMP_CE2_DIS);
+			BootGpioOut(CONFIG_AMP_IO, CONFIG_AMP_ENA);
+		}
 	}
 	else
-	{
-#if CONFIG_AMP_ENA
-		__gpio_clear_pin(CONFIG_AMP_IO);
-#else
-		__gpio_set_pin(CONFIG_AMP_IO);
-#endif		
+	{	//关闭功放
+		BootGpioOut(CONFIG_AMP_CE2_IO, CONFIG_AMP_CE2_DIS);
+		BootGpioOut(CONFIG_AMP_IO, CONFIG_AMP_DIS);
 	}
+#else
+	//只有一个功放
+#if defined(CONFIG_AMP_IO)
+	BootGpioSet(CONFIG_AMP_IO,0);
+	if(io)
+		BootGpioOut(CONFIG_AMP_IO,CONFIG_AMP_ENA);
+	else
+		BootGpioOut(CONFIG_AMP_IO,CONFIG_AMP_DIS);
+#endif
 #endif
 }
 
@@ -791,23 +807,13 @@ void SetPowerAmplifier(char io)
 ////////////////////////////////////////////////////
 void SetMoseCe(char io)
 {
-	__gpio_as_output(CONFIG_PIPO_IO);
+#if defined(CONFIG_PIPO_IO)
+	BootGpioSet(CONFIG_PIPO_IO,0);
 	if(io)
-	{
-#if CONFIG_PIPO_ENA
-		__gpio_set_pin(CONFIG_PIPO_IO);
-#else
-		__gpio_clear_pin(CONFIG_PIPO_IO);
-#endif		
-	}
+		BootGpioOut(CONFIG_PIPO_IO,CONFIG_PIPO_ENA);
 	else
-	{
-#if CONFIG_PIPO_ENA
-		__gpio_clear_pin(CONFIG_PIPO_IO);
-#else
-		__gpio_set_pin(CONFIG_PIPO_IO);
-#endif		
-	}
+		BootGpioOut(CONFIG_PIPO_IO,CONFIG_PIPO_DIS);
+#endif
 }
 
 ////////////////////////////////////////////////////
@@ -846,6 +852,9 @@ void CloseMediaCodecDevice()
 ////////////////////////////////////////////////////
 void OpenMediaCodecDevice()
 {
+	unsigned char pmr1;
+	pmr1 = codec_reg_read(A_CODEC_PMR1);
+	kdebug(mod_media, PRINT_INFO, "pmr1 = %x\n",pmr1);
 #ifdef CODEC_ALWAYS_OPEN
 	if( codec_reg_read(A_CODEC_PMR1) & 0x90)
 	{	//CODEC处于开的状态，不需要重新打开
@@ -1115,14 +1124,17 @@ void MediaDraveInit(char channel)
 #ifndef	CODEC_ALWAYS_OPEN
 	MediaSysInit();
 #else
-	if(fDeviceStatus == DEVICE_CLOSE_STATUS || !(codec_reg_read(A_CODEC_PMR1) & 0x90) )
+	kdebug(mod_media, PRINT_INFO, "fDeviceStatus = %d, pmr1 = %d\n",fDeviceStatus,codec_reg_read(A_CODEC_PMR1));
+	if(fDeviceStatus == DEVICE_CLOSE_STATUS || (codec_reg_read(A_CODEC_PMR1) & 0x90) )
 	{
 		MediaSysInit();
 	}
 	else
 	{
-		GetDmaInfo();
+		//GetDmaInfo();
+#ifdef KPRINTF_DEF
 		kprintf("codec is open\n");
+#endif
 	}
 #endif
 

@@ -233,6 +233,18 @@ static int CloseWavDrv(PAK_OBJECT obj, PAK_VFILE vfile)
 ////////////////////////////////////////////////////
 static int WavSeek(PAK_OBJECT obj, int ms)
 {
+	DWORD offset;
+	PAK_VFILE vfile;
+
+	vfile = &obj->File;
+	kdebug(mod_audio, PRINT_INFO, "WavSeek: ms = %d\n",ms);
+	if( ms < 1000 * 60 * 2)
+		offset = (obj->Info.AudioSamplerate * obj->Info.AudioChannels * sizeof(short)) * ms / 1000;
+	else
+		offset = ((obj->Info.AudioSamplerate * obj->Info.AudioChannels * sizeof(short))) * (ms / 1000);
+	offset &= 0xfffffffc;
+	offset += sizeof(WAVE_HEADER);
+	JzCbFileSeek(vfile,offset,SEEK_SET);
 	return 1;
 }
 
