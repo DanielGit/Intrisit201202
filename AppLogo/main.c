@@ -141,20 +141,27 @@ static int cbTaskLogo(PMESSAGE msg)
 		hdesktop = CreateSimDebugProcess("Desktop", "", TaskDesktop);
 		CreateSimDebugProcess("TaskBar", "", TaskBar);
 		CreateSimDebugProcess("Windows", "", TaskWindows);
-#elif defined(CONFIG_MAC_NE350) || defined(CONFIG_MAC_NE360) || defined(CONFIG_MAC_NP7000)
+#elif defined(CONFIG_MAC_NE350) || defined(CONFIG_MAC_NE360) || defined(CONFIG_MAC_NP7000) || defined(CONFIG_MAC_NP5800) || defined(CONFIG_MAC_ND800)
 		if(logo->sd_test_flag)
 			hdesktop = CreateProcess("E:\\Programs\\sdTestMain.elf", "");
 
 		if(hdesktop == NULL)
 			hdesktop = CreateProcess("F:\\Programs\\jDesktop.elf", "");
+
 		if(hdesktop == NULL)
 			hdesktop = CreateProcess("D:\\Programs\\jDesktop.elf", "");
+
+		if(hdesktop == NULL)
+			hdesktop = CreateProcess("C:\\Programs\\jDesktop.elf", "");
 #else
 		if(logo->sd_test_flag)
 			hdesktop = CreateProcess("E:\\Programs\\sdTestMain.elf", "");
 
 		if(hdesktop == NULL)
 			hdesktop = CreateProcess("D:\\Programs\\jDesktop.elf", "");
+
+		if(hdesktop == NULL)
+			hdesktop = CreateProcess("C:\\Programs\\jDesktop.elf", "");
 #endif		
 
 #ifndef WIN32
