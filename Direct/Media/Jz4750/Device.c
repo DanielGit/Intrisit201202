@@ -46,7 +46,7 @@
 #define PHYADDR(n)			(unsigned int)((n) & 0x1fffffff)
 #define PHYSADDR(x)			(((unsigned int)x) & 0x1fffffff)
 
-#if defined(CONFIG_MCU_JZ4750L) || defined(CONFIG_MCU_JZ4755)
+#if defined(CONFIG_MCU_JZ4750L) || defined(CONFIG_MCU_JZ4755) || defined(CONFIG_MCU_JZ4750)
 #define INREG8(x)           ( (unsigned char)(*(volatile unsigned char * const)(x)) )
 #define OUTREG8(x, y)       *(volatile unsigned char * const)(x) = (y)
 #define SETREG8(x, y)       OUTREG8(x, INREG8(x)|(y))

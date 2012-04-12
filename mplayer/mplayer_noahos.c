@@ -421,13 +421,117 @@ long BUFF_PauseBuff ()
 
 // ================ NOAH OS audio driver functions =================
 
+//#define SAVE_AUDIO_DATA
+
+#ifdef SAVE_AUDIO_DATA
+#include "config.h"
+#include "libaf/af_format.h"
+#include "libavutil/bswap.h"
+
+#define WAV_ID_RIFF 0x46464952 /* "RIFF" */
+#define WAV_ID_WAVE 0x45564157 /* "WAVE" */
+#define WAV_ID_FMT  0x20746d66 /* "fmt " */
+#define WAV_ID_DATA 0x61746164 /* "data" */
+#define WAV_ID_PCM  0x0001
+
+struct WaveHeader
+{
+	uint32_t riff;
+	uint32_t file_length;
+	uint32_t wave;
+	uint32_t fmt;
+	uint32_t fmt_length;
+	uint16_t fmt_tag;
+	uint16_t channels;
+	uint32_t sample_rate;
+	uint32_t bytes_per_second;
+	uint16_t block_align;
+	uint16_t bits;
+	uint32_t data;
+	uint32_t data_length;
+};
+
+/* init with default values */
+static struct WaveHeader wavhdr;
+static void *dump_fp;
+static int write_wave_header(int rate,int channels,int format,int flags) {
+	int bits=8;
+	
+	switch(format){
+	case AF_FORMAT_S8:
+	    format=AF_FORMAT_U8;
+	case AF_FORMAT_U8:
+	    break;
+	default:
+	    format=AF_FORMAT_S16_LE;
+	    bits=16;
+	    break;
+	}
+
+	wavhdr.riff = le2me_32(WAV_ID_RIFF);
+	wavhdr.wave = le2me_32(WAV_ID_WAVE);
+	wavhdr.fmt = le2me_32(WAV_ID_FMT);
+	wavhdr.fmt_length = le2me_32(16);
+	wavhdr.fmt_tag = le2me_16(WAV_ID_PCM);
+	wavhdr.channels = le2me_16(channels);
+	wavhdr.sample_rate = le2me_32(rate);
+	wavhdr.bytes_per_second = le2me_32(channels*rate*(bits/8));
+	wavhdr.bits = le2me_16(bits);
+	wavhdr.block_align = le2me_16(channels * (bits / 8));
+	
+	wavhdr.data = le2me_32(WAV_ID_DATA);
+	wavhdr.data_length=le2me_32(0x7ffff000);
+	wavhdr.file_length = wavhdr.data_length + sizeof(wavhdr) - 8;
+
+	dump_fp = kfopen("d:\\mpaudiodump.wav", "w+b");
+	if(dump_fp) {
+			kfwrite(&wavhdr, 1, sizeof(wavhdr), dump_fp);
+			wavhdr.file_length=wavhdr.data_length=0;
+		return 1;
+	}
+	else
+	  kprintf ("==== Open audio dump file error =====\n");
+	return 0;
+}
+
+static void write_wave_end () {
+	if (! dump_fp)
+		return;
+		
+  kfseek(dump_fp, 0, SEEK_SET);/* Write wave header */
+	
+	wavhdr.file_length = wavhdr.data_length + sizeof(wavhdr) - 8;
+	wavhdr.file_length = le2me_32(wavhdr.file_length);
+	wavhdr.data_length = le2me_32(wavhdr.data_length);
+	kfwrite(&wavhdr, 1, sizeof(wavhdr), dump_fp);
+	
+	kfclose(dump_fp);
+	kprintf ("++++++++ close the audio dump file ++++++++++\n");
+}
+
+static void write_wave_data (unsigned char *data, int len) {
+	if (! dump_fp)
+		return;
+		
+	kfwrite(data, 1, len, dump_fp);
+  wavhdr.data_length += len;
+}
+#endif
+
 int noahos_audio_init(int rate,int channels,int format,int flags)
 {
-	return jz47_av_decp->os_audio_init (rate, channels, format, flags);
+#ifdef SAVE_AUDIO_DATA
+  write_wave_header(rate, channels, format, flags);
+#endif	
+	
+  return jz47_av_decp->os_audio_init (rate, channels, format, flags);
 }
 
 void noahos_audio_uninit(int immed)
 {
+#ifdef SAVE_AUDIO_DATA
+  write_wave_end();
+#endif		
   jz47_av_decp->os_audio_uninit (immed);
 }
 
@@ -453,7 +557,13 @@ int noahos_audio_get_space(void)
 
 int noahos_audio_play(void* data,int len,int flags)
 {
-	return jz47_av_decp->os_audio_play (data, len, flags);
+#ifdef SAVE_AUDIO_DATA
+  write_wave_data(data, len);
+#endif
+
+  len = jz47_av_decp->os_audio_play (data, len, flags);
+
+  return len;
 }
 
 float noahos_audio_get_delay(void)
