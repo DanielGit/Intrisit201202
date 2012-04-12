@@ -1,0 +1,11 @@
+echo $1 $2 $3
+combin BootBoot.bin 0x2000 boot.bin boot.bin
+combin BootLoader.bin 0x4000 BootBoot.bin loader.bin
+rm BootBoot.bin
+combin _v2Bios.bin 0x80000 BootLoader.bin _noahos.bin
+rm BootLoader.bin
+v2combine V2Bios.bin 0x1000 0x801f0 _v2Bios.bin BiosApp.bin
+rm _v2Bios.bin
+GetRevision V2Bios.bin 0x801fc http://192.168.1.186/svn/noahosv2
+BiosVer $1 0x801f8 V2Bios.bin $2
+cp V2Bios.bin ../../$3

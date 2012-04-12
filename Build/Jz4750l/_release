@@ -1,0 +1,7 @@
+echo $1 $2 $3
+cp ./plugin/mplayer_plugin.bin ./
+v2combine _v2.bin 0x400 0x1f0 _noahos.bin logo.bin
+v2combine v2.bin 0x400 0x1e8 _v2.bin mplayer_plugin.bin
+GetRevision v2.bin 0x1fc http://192.168.1.186/svn/noahosv2
+version $1 0x1f8 v2.bin $2
+cp v2.bin ../../$3
