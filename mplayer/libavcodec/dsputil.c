@@ -1863,7 +1863,6 @@ static void put_mpeg4_qpel16_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride
   S32I2M(xr12,mul_ct3); //xr12:1  1  1  1
   S32I2M(xr11,    ct0); //xr11:  16    16
 
-  dst_aln -= dstStride;
  for(i=0; i<4; i++)
  { 
   S32LDD(xr1,src_aln0,0);
@@ -1898,7 +1897,7 @@ static void put_mpeg4_qpel16_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride
   Q16ACC_AA(xr2,xr11,xr0,xr4);
   Q16SAR(xr2,xr2,xr4,xr4,5);
   Q16SAT(xr2,xr2,xr4);       //xr2:dst[3]~dst[0] 
-  S32SDIV(xr2,dst_aln,dstStride,0x0);
+  S32STD(xr2,dst_aln,0x0);
   ///////////////////////////////////////
   S32LDIV(xr2,src_aln0,srcStride,0);
   S32LDD(xr10,src_aln0,4);
@@ -2156,7 +2155,7 @@ static void put_mpeg4_qpel16_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride
   Q16ACC_AA(xr8,xr11,xr0,xr10);
   Q16SAR(xr8,xr8,xr10,xr10,5);
   Q16SAT(xr8,xr8,xr10);       //xr8:dst[2*dstStride+3]~dst[2*dstStride]
-  S32STD(xr8,dst_aln,0x0);
+  S32SDIV(xr8,dst_aln,dstStride,0x0);
   src_aln0 = src_aln + 4;
   src_aln += 4;
   dst_aln = dst_aln1 +4;
