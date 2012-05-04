@@ -19,6 +19,7 @@
 
 #include "mp_msg.h"
 #include "help_mp.h"
+#include "libavcodec/avcodec.h"
 
 #include "vd_internal.h"
 
@@ -582,7 +583,14 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 	mpi->planes[2] = *(buffer + 6);
 	mpi->stride[2] = *(buffer + 7);
 
-	mpi->pict_type = (transform_out[1] & 4)?1:0;
+	//mpi->pict_type = (transform_out[1] & 4)?1:0;
+	if (transform_out[1] & 4)
+	  mpi->pict_type = FF_I_TYPE;
+	else if (transform_out[1] & 8)
+	  mpi->pict_type = FF_B_TYPE;
+	else
+	  mpi->pict_type = FF_P_TYPE;
+
 	mpi->stride[3] = *(buffer + 9);    // error frame
     // sh->pts = (float)(transform_out[2]) / 1000.0;
 	//printf("sh->pts = %f\n",sh->pts);

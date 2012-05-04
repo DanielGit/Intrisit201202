@@ -660,7 +660,7 @@ int jz47_put_image (struct vf_instance_s *vf, mp_image_t *mpi, double pts)
 
   if (!(mpi->flags & MP_IMGFLAG_DRAW_CALLBACK && dmpi))
   {
-    if (mpi->pict_type == 1)  /* P_type */
+    if (mpi->pict_type == FF_I_TYPE)
       visual = 1;
     if (visual || (mpi->pict_type == 0)) /* I_type */
       jz47_put_image_with_ipu (vf, mpi, pts);
