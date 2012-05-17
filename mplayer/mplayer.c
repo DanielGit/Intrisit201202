@@ -2667,10 +2667,9 @@ static int sleep_until_update(float *time_frame, float *aq_sleep_time)
 		// delay = amount of audio buffered in soundcard/driver
 	
 	
-	
-		//if (delay > 0.25) delay=0.25; else
-		//if (delay < 0.10) delay=0.10;
-		if (*time_frame > delay*0.6 && mpctx->delay > 0) 
+		if (delay > 0.25) delay=0.25; else
+		if (delay < 0.10) delay=0.10;
+		if (*time_frame > delay*0.6/* && mpctx->delay > 0*/) 
 		{
 			// sleep time too big - may cause audio drops (buffer underrun)
 			frame_time_remaining = 1;
@@ -3068,6 +3067,12 @@ decode_video:
 		int in_size;
 		current_module = "video_read_frame";
 		frame_time = sh_video->next_frame_time;
+		if (memcmp(mpctx->demuxer->desc->name, "real", 4) == 0){
+			if (frame_time > 2.0){
+				kprintf("sh_video->next_frame_time:%d\n", (int)(frame_time*1000));
+				frame_time = 0.1;
+			}
+		}
 		//F("%d\n",(int)(frame_time* 1000.0));
 		//kprintf("frame_dropping = %d\n",frame_dropping);
 #ifndef NOAH_OS		
@@ -3085,6 +3090,14 @@ decode_video:
 				float d = delay-mpctx->delay;
 
 					av_drop = AVdrop_presync(frame_time);
+					if (memcmp(mpctx->demuxer->desc->name, "real", 4) == 0){
+						float delay = playback_speed * mpctx->audio_out->get_delay();
+	  					float real_delay = mpctx->delay - delay;// - dropped_frames * frame_time;
+						if (av_drop && real_delay> 0.1)
+							av_drop = ds_get_next_real_keyframe_buffer(sh_video->ds, &real_delay);
+						else
+							av_drop = 0;
+					}
 			}
 			if(av_drop == 1)
 			{
@@ -5299,7 +5312,7 @@ struct AV_PLUGIN_TBL
 		return NULL;
 	while (p->name)
 	{
-		kprintf("name: %s %s\n",dll_name,p->name);
+		//kprintf("name: %s %s===\n",dll_name,p->name);
 		if (!strcmp(dll_name, p->name))
 			break;
 		p++;

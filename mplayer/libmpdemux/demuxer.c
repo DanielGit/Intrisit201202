@@ -535,6 +535,43 @@ int ds_fill_buffer(demux_stream_t *ds){
 			free_demux_packet(p);
 		}
 	}
+
+	int ds_get_next_real_keyframe_buffer(demux_stream_t *ds, float *real_delay){
+		demuxer_t *demux = ds->demuxer;
+		int count = 0;
+		demux_packet_t *header = ds->first;
+
+		while (ds->packs < 30 && count<10){
+			demux_fill_buffer(demux,ds);
+			count++;
+		}
+		//kprintf("222 ds_get_next_real_keyframe_buffer packs:%d\n", ds->packs);
+
+		if (ds->packs < 10)
+			return 0;
+
+		while (header != NULL){
+			int result = demux_control(demux,DEMUXER_CTRL_IS_KEYFRAME,&(header->flags));
+			if ( result == DEMUXER_CTRL_NOTIMPL){
+				return 0;
+			}else if (result){
+				if ((header->pts - ds->current->pts) < *real_delay){
+					kprintf("now we return:%d real_delay:%d\n", (int)((header->pts - ds->current->pts)*1000), (int)(*real_delay*1000));
+					return 1;
+				}else{
+					//kprintf("find key frame but h->pts:%d  - cur->pts:%d = %d,  real_delay:%d\n",
+						//(int)(header->pts*1000), (int)(ds->current->pts*1000), (int)((header->pts - ds->current->pts)*1000),
+						//(int)(*real_delay*1000));
+					return 0;
+				}
+			}
+
+			header = header->next;
+		}
+
+		return 0;
+	}
+
 	float ds_fill_keyframe_buffer(demux_stream_t *ds)
 	{
 		demuxer_t *demux=ds->demuxer;
