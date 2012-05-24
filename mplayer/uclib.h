@@ -196,8 +196,8 @@ static inline void uc_memset(void *to,unsigned char v,unsigned int size)
 	i_tmp = ((end_to - 32) & (~31));
 	
 	//F("i_tmp = %x i_to = %x\n",i_tmp,i_to);
-	
-	while(i_tmp > i_to)  
+	i_to -= 4;
+	while(i_tmp - 4 > i_to)  
 	{
 		#if MEMSET_JZ_MXU
 		i_pref(30,i_to + 4,0);
