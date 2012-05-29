@@ -128,7 +128,7 @@ all : $(PROGRAM)
 	@cd $(TOP)/AppLogo/build/MIPS && make
 	@cp -p $(TOP)/AppLogo/build/MIPS/logo.bin ./
 
-	make_3.81 -C plugin
+	make -C plugin
 	@echo 
 	@echo Creating binary...
 	cp ./plugin/mplayer_plugin.bin ./

@@ -35,7 +35,7 @@
 
 #include "avcodec.h"
 #include "wmafixed.h"
-#include "fixed.h"
+#include "fixedpoint.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -50,201 +50,144 @@ int ff_mdct_init_fixed(MDCTContextFix *s, int nbits, int inverse);
 void ff_imdct_calc_fixed(MDCTContextFix *s, int *outputfix,
                    const int *input, FFTSample *tmp);
 
-#undef printf
+//The following variable is set in mplayer.c, which is added by jyu 2009-4-24
+extern int jz_cpu_type_id;
 //#undef JZ47_OPT
 #undef tprint
 //#define TRACE
 //#define tprintf(p,...) printf(__VA_ARGS__)
 
 #ifdef JZ47_OPT
-int tablefix_10exp1div16[64] = {
-/*00*/ 256,
-/*01*/ 295,
-/*02*/ 341,
-/*03*/ 394,
-/*04*/ 455,
-/*05*/ 525,
-/*06*/ 607,
-/*07*/ 701,
-/*08*/ 809,
-/*09*/ 934,
-/*10*/ 1079,
-/*11*/ 1246,
-/*12*/ 1439,
-/*13*/ 1662,
-/*14*/ 1919,
-/*15*/ 2216,
-/*16*/ 2560,
-/*17*/ 2956,
-/*18*/ 3413,
-/*19*/ 3942,
-/*20*/ 4552,
-/*21*/ 5257,
-/*22*/ 6070,
-/*23*/ 7010,
-/*24*/ 8095,
-/*25*/ 9348,
-/*26*/ 10795,
-/*27*/ 12466,
-/*28*/ 14395,
-/*29*/ 16624,
-/*30*/ 19197,
-/*31*/ 22168,
-/*32*/ 25600,
-/*33*/ 29562,
-/*34*/ 34138,
-/*35*/ 39422,
-/*36*/ 45523,
-/*37*/ 52570,
-/*38*/ 60707,
-/*39*/ 70103,
-/*40*/ 80954,
-/*41*/ 93484,
-/*42*/ 107954,
-/*43*/ 124663,
-/*44*/ 143959,
-/*45*/ 166241,
-/*46*/ 191972,
-/*47*/ 221686,
-/*48*/ 256000,
-/*49*/ 295624,
-/*50*/ 341381,
-/*51*/ 394221,
-/*52*/ 455239,
-/*53*/ 525702,
-/*54*/ 607071,
-/*55*/ 701035,
-/*56*/ 809543,
-/*57*/ 934845,
-/*58*/ 1079543,
-/*59*/ 1246636,
-/*60*/ 1439593,
-/*61*/ 1662416,
-/*62*/ 1919729,
-/*63*/ 2216868,
+int tablefix16_10exp1div16[64] = {
+/*00*/ 65536,
+/*01*/ 75679,
+/*02*/ 87393,
+/*03*/ 100920,
+/*04*/ 116541,
+/*05*/ 134579,
+/*06*/ 155410,
+/*07*/ 179465,
+/*08*/ 207243,
+/*09*/ 239320,
+/*10*/ 276363,
+/*11*/ 319139,
+/*12*/ 368536,
+/*13*/ 425578,
+/*14*/ 491450,
+/*15*/ 567518,
+/*16*/ 655360,
+/*17*/ 756797,
+/*18*/ 873936,
+/*19*/ 1009206,
+/*20*/ 1165413,
+/*21*/ 1345798,
+/*22*/ 1554103,
+/*23*/ 1794650,
+/*24*/ 2072430,
+/*25*/ 2393205,
+/*26*/ 2763630,
+/*27*/ 3191390,
+/*28*/ 3685360,
+/*29*/ 4255787,
+/*30*/ 4914506,
+/*31*/ 5675183,
+/*32*/ 6553600,
+/*33*/ 7567979,
+/*34*/ 8739366,
+/*35*/ 10092062,
+/*36*/ 11654131,
+/*37*/ 13457981,
+/*38*/ 15541034,
+/*39*/ 17946506,
+/*40*/ 20724302,
+/*41*/ 23932051,
+/*42*/ 27636302,
+/*43*/ 31913903,
+/*44*/ 36853601,
+/*45*/ 42557874,
+/*46*/ 49145066,
+/*47*/ 56751837,
+/*48*/ 65536000,
+/*49*/ 75679792,
+/*50*/ 87393660,
+/*51*/ 100920624,
+/*52*/ 116541319,
+/*53*/ 134579816,
+/*54*/ 155410347,
+/*55*/ 179465069,
+/*56*/ 207243028,
+/*57*/ 239320516,
+/*58*/ 276363020,
+/*59*/ 319139037,
+/*60*/ 368536010,
+/*61*/ 425578746,
+/*62*/ 491450669,
+/*63*/ 567518378,
+};
+long long pow_table[] =
+    {
+        0x10000LL,0x11f3dLL,0x14249LL,0x1699cLL,0x195bcLL,0x1c73dLL,0x1fec9LL,0x23d1dLL,0x2830bLL,0x2d182LL,
+        0x3298bLL,0x38c53LL,0x3fb28LL,0x47783LL,0x5030aLL,0x59f98LL,0x64f40LL,0x71457LL,0x7f17bLL,0x8e99aLL,
+        0xa0000LL,0xb385eLL,0xc96d9LL,0xe2019LL,0xfd954LL,0x11c865LL,0x13f3dfLL,0x166320LL,0x191e6eLL,0x1c2f10LL,
+        0x1f9f6eLL,0x237b39LL,0x27cf8bLL,0x2cab1aLL,0x321e65LL,0x383bf0LL,0x3f1882LL,0x46cb6aLL,0x4f6eceLL,0x592006LL,
+        0x640000LL,0x7033acLL,0x7de47eLL,0x8d40f6LL,0x9e7d44LL,0xb1d3f4LL,0xc786b7LL,0xdfdf43LL,0xfb304bLL,0x119d69aLL,
+        0x13c3a4eLL,0x162d03aLL,0x18e1b70LL,0x1beaf00LL,0x1f52feeLL,0x2325760LL,0x276f514LL,0x2c3f220LL,0x31a5408LL,
+        0x37b403cLL,0x3e80000LL,0x46204b8LL,0x4eaece8LL,0x58489a0LL,0x630e4a8LL,0x6f24788LL,0x7cb4328LL,0x8beb8a0LL,
+        0x9cfe2f0LL,0xb026200LL,0xc5a4710LL,0xddc2240LL,0xf8d1260LL,0x1172d600LL,0x1393df60LL,0x15f769c0LL,0x18a592c0LL,
+        0x1ba77540LL,0x1f074840LL,0x22d08280LL,0x27100000LL,0x2bd42f40LL,0x312d4100LL,0x372d6000LL,0x3de8ee80LL,
+        0x4576cb80LL,0x4df09f80LL,0x57733600LL,0x621edd80LL,0x6e17d480LL,0x7b86c700LL,0x8a995700LL,0x9b82b800LL,
+        0xae7c5c00LL,0xc3c6b900LL,0xdbaa2200LL,0xf677bc00LL,0x1148a9400LL,0x13648d200LL,0x15c251800LL,0x186a00000LL,
+        0x1b649d800LL,0x1ebc48a00LL,0x227c5c000LL,0x26b195000LL,0x2b6a3f000LL,0x30b663c00LL,0x36a801c00LL,0x3d534a400LL,
+        0x44cee4800LL,0x4d343c800LL,0x569fd6000LL,0x6131b2800LL,0x6d0db9800LL,0x7a5c33800LL,0x894a55000LL,0x9a0ad6000LL,
+        0xacd69d000LL,0xc1ed84000LL,0xd9972f000LL,0xf42400000LL,0x111ee28000LL,0x1335ad6000LL,0x158db98000LL,0x182efd4000LL,
+        0x1b22676000LL,0x1e71fe6000LL,0x2229014000LL,0x26540e8000LL,0x2b014f0000LL,0x3040a5c000LL,0x3623e60000LL,0x3cbf0fc000LL,
+        0x4428940000LL,0x4c79a08000LL,0x55ce758000LL,0x6046c58000LL,0x6c06220000LL,0x7934728000LL,0x87fe7d0000LL,0x9896800000LL,
+        0xab34d90000LL,0xc018c60000LL,0xd7893f0000LL,0xf1d5e40000LL,0x10f580a0000LL,0x13073f00000LL,0x1559a0c0000LL,0x17f48900000LL,
+        0x1ae0d160000LL,0x1e286780000LL,0x21d66fc0000LL,0x25f769c0000LL,0x2a995c80000LL,0x2fcc0440000LL,0x35a10940000LL,
+        0x3c2c3b80000LL,0x4383d500000LL,0x4bc0c780000LL,0x54ff0e80000LL,0x5f5e1000000LL,0x6b010780000LL,0x780f7c00000LL,
+        0x86b5c800000LL,0x9725ae00000LL,0xa9970600000LL,0xbe487500000LL,0xd5804700000LL,0xef8d5a00000LL,0x10cc82e00000LL,
+        0x12d940c00000LL,0x152605c00000LL,0x17baa2200000LL,0x1a9fd9c00000LL,0x1ddf82a00000LL,0x2184a5c00000LL,0x259ba5400000LL,
+        0x2a3265400000LL,0x2f587cc00000LL,0x351f69000000LL,0x3b9aca000000LL,0x42e0a4800000LL,0x4b09ad800000LL,
+        0x54319d000000LL,0x5e778d000000LL,0x69fe64000000LL,0x76ed49800000LL,0x85702c000000LL,0x95b858000000LL,
+        0xa7fd1c000000LL,0xbc7c87000000LL,0xd37c3a000000LL,0xed4a55000000LL,0x10a3e82000000LL,0x12abb1a000000LL,
+        0x14f2e7a000000LL,0x1781474000000LL,0x1a5f7f4000000LL,0x1d974de000000LL,0x2133a18000000LL
+    };
+
+static int ff_wma_lspfix_codebook[NB_LSP_COEFS][16] = {
+{0x1fcc2,0x1fabd,0x1f8c7,0x1f66d,0x1f34c,0x1eef1,0x1e83e,0x1dca6,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0},
+{0x1f8fc,0x1f5f9,0x1f328,0x1f025,0x1ecd8,0x1e8fc,0x1e46f,0x1df1b,0x1d87c,0x1d047,0x1c6b5,0x1bb8f,0x1add8,0x19c0e,0x18220,0x154ca},
+{0x1e6ae,0x1dd65,0x1d58e,0x1cd3b,0x1c439,0x1ba69,0x1af5e,0x1a32c,0x195c4,0x18498,0x16fd2,0x156ea,0x13de4,0x11f63,0xf7ae,0xbd90},
+{0x1c4fa,0x1ada0,0x19976,0x1891d,0x17986,0x1697f,0x15858,0x145fd,0x1316b,0x11900,0xfcfa,0xdf55,0xbe63,0x9902,0x6e83,0x2e05},
+{0x16f2d,0x15205,0x135f3,0x11b14,0x10170,0xe743,0xcdec,0xb504,0x9ab2,0x7f86,0x6296,0x4565,0x24e2,0x90,0xffffd52f,0xffffa172},
+{0xffbc,0xd786,0xb521,0x943e,0x7876,0x5ea3,0x44ad,0x2bf0,0x1274,0xfffff829,0xfffe9981,0xffffbfab,0xffffa0bb,0xffff7d3f,0xffff59e3,0xffff3269},
+{0x43e1,0x102a,0xffffe94a,0xffffc9fa,0xffffb076,0xffff9a6b,0xffff871c,0xffff7555,0xffff62b4,0xffff4f81,0xffff3bf4,0xffff25f7,0xffff0c0f,0xfffeef53,0xfffecb7e,0xfffe9fb3},
+{0xffff75ea,0xffff4325,0xffff1da2,0xfffefd23,0xfffeddb9,0xfffebb51,0xfffe945f,0xfffe6131,0xfffee5fe,0xfffed5ba,0xfffec442,0xfffeb224,0xfffe9f95,0xfffe880e,0xfffe6c7a,0xfffe54c1},
+{0xffff9d2e,0xffff709e,0xffff5489,0xffff3d5e,0xffff295b,0xffff1761,0xffff06a2,0xfffef68a,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0},
+{0xfffe7045,0xfffe572f,0xfffe45ea,0xfffe38af,0xfffe2d8f,0xfffe2347,0xfffe18df,0xfffe0d42,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0}
 };
 
-int table_fixpow10[5][16] = {
-/*0, 00, 1.000000, 1.000000*/ 0x00000100,
-/*0, 01, 1.000035, 1.000000*/ 0x00000100,
-/*0, 02, 1.000070, 1.000000*/ 0x00000100,
-/*0, 03, 1.000105, 1.000000*/ 0x00000100,
-/*0, 04, 1.000141, 1.000000*/ 0x00000100,
-/*0, 05, 1.000176, 1.000000*/ 0x00000100,
-/*0, 06, 1.000211, 1.000000*/ 0x00000100,
-/*0, 07, 1.000246, 1.000000*/ 0x00000100,
-/*0, 08, 1.000281, 1.000000*/ 0x00000100,
-/*0, 09, 1.000316, 1.000000*/ 0x00000100,
-/*0, 10, 1.000351, 1.000000*/ 0x00000100,
-/*0, 11, 1.000387, 1.000000*/ 0x00000100,
-/*0, 12, 1.000422, 1.000000*/ 0x00000100,
-/*0, 13, 1.000457, 1.000000*/ 0x00000100,
-/*0, 14, 1.000492, 1.000000*/ 0x00000100,
-/*0, 15, 1.000527, 1.000000*/ 0x00000100,
-/*1, 00, 1.000000, 1.000000*/ 0x00000100,
-/*1, 01, 1.000562, 1.000000*/ 0x00000100,
-/*1, 02, 1.001125, 1.000000*/ 0x00000100,
-/*1, 03, 1.001688, 1.000000*/ 0x00000100,
-/*1, 04, 1.002251, 1.000000*/ 0x00000100,
-/*1, 05, 1.002815, 1.000000*/ 0x00000100,
-/*1, 06, 1.003379, 1.000000*/ 0x00000100,
-/*1, 07, 1.003943, 1.003906*/ 0x00000101,
-/*1, 08, 1.004507, 1.003906*/ 0x00000101,
-/*1, 09, 1.005072, 1.003906*/ 0x00000101,
-/*1, 10, 1.005637, 1.003906*/ 0x00000101,
-/*1, 11, 1.006203, 1.003906*/ 0x00000101,
-/*1, 12, 1.006769, 1.003906*/ 0x00000101,
-/*1, 13, 1.007335, 1.003906*/ 0x00000101,
-/*1, 14, 1.007901, 1.007812*/ 0x00000102,
-/*1, 15, 1.008468, 1.007812*/ 0x00000102,
-/*2, 00, 1.000000, 1.000000*/ 0x00000100,
-/*2, 01, 1.009035, 1.007812*/ 0x00000102,
-/*2, 02, 1.018152, 1.015625*/ 0x00000104,
-/*2, 03, 1.027351, 1.027344*/ 0x00000107,
-/*2, 04, 1.036633, 1.035156*/ 0x00000109,
-/*2, 05, 1.045999, 1.042969*/ 0x0000010b,
-/*2, 06, 1.055450, 1.054688*/ 0x0000010e,
-/*2, 07, 1.064986, 1.062500*/ 0x00000110,
-/*2, 08, 1.074608, 1.074219*/ 0x00000113,
-/*2, 09, 1.084317, 1.082031*/ 0x00000115,
-/*2, 10, 1.094114, 1.093750*/ 0x00000118,
-/*2, 11, 1.103999, 1.101562*/ 0x0000011a,
-/*2, 12, 1.113974, 1.113281*/ 0x0000011d,
-/*2, 13, 1.124039, 1.121094*/ 0x0000011f,
-/*2, 14, 1.134194, 1.132812*/ 0x00000122,
-/*2, 15, 1.144442, 1.140625*/ 0x00000124,
-/*3, 00, 1.000000, 1.000000*/ 0x00000100,
-/*3, 01, 1.154782, 1.152344*/ 0x00000127,
-/*3, 02, 1.333521, 1.332031*/ 0x00000155,
-/*3, 03, 1.539927, 1.539062*/ 0x0000018a,
-/*3, 04, 1.778279, 1.777344*/ 0x000001c7,
-/*3, 05, 2.053525, 2.050781*/ 0x0000020d,
-/*3, 06, 2.371374, 2.371094*/ 0x0000025f,
-/*3, 07, 2.738420, 2.738281*/ 0x000002bd,
-/*3, 08, 3.162278, 3.160156*/ 0x00000329,
-/*3, 09, 3.651741, 3.648438*/ 0x000003a6,
-/*3, 10, 4.216965, 4.214844*/ 0x00000437,
-/*3, 11, 4.869675, 4.867188*/ 0x000004de,
-/*3, 12, 5.623413, 5.621094*/ 0x0000059f,
-/*3, 13, 6.493816, 6.492188*/ 0x0000067e,
-/*3, 14, 7.498942, 7.496094*/ 0x0000077f,
-/*3, 15, 8.659643, 8.656250*/ 0x000008a8,
-/*4, 00, 1.000000, 1.000000*/ 0x00000100,
-/*4, 01, 10.000000, 10.000000*/ 0x00000a00,
-/*4, 02, 100.000000, 100.000000*/ 0x00006400,
-/*4, 03, 1000.000000, 1000.000000*/ 0x0003e800,
-/*4, 04, 10000.000000, 10000.000000*/ 0x00271000,
-/*4, 05, 100000.000000, 100000.000000*/ 0x0186a000,
-/*4, 06, 1000000.000000, 1000000.000000*/ 0x0f424000,
-};
-
-int fixedpow10 (int exp)
+int sqrtint (int frac)
 {
-  int powexp = exp;
-  int value = (1 << FRAC_BIT);
-  int idx;
-
-  idx = 0;
-
-  while (powexp)
-  {
-    value = FIX_MULT(value, table_fixpow10[idx][powexp & 0xf]);
-    powexp >>= 4;
-    idx++;
-  }
-
-  return value;
-}
-
-int sqrtint (int a)
-{
-  int aexp, i, value, sval, eval;
-
-  if (a <= 0)
+  int i, value, sval, eval;
+  long long a;
+  if (frac <= 0)
     return 0;
 
-  a = a << FRAC_BIT;
+  a = (long long)frac << 16;
 
-  // get 2 exp
-  for (i = 0; i < 31; i++)
-    if ((a >> (i + 1)) == 0) 
-      break;
-
-  aexp = i / 2;
-  sval = (1 << aexp);
-  eval = (a >> aexp);
-
-  
+  sval = 1;
+  eval = (1 << 31) - 2;
+ 
   while (eval - sval > 1)
   {
     value = (eval + sval) / 2;
-    if ((value * value) < value || (value * value) > a)
+    if (((long long)value * value) > a)
       eval = value;
     else
       sval = value;
   }
 
-  if ((a - sval * sval) < (eval * eval - a))
+  if ((a - (long long)sval * sval) < ((long long)eval * eval - a))
     return sval;  
   else
     return eval;
@@ -255,7 +198,7 @@ int sqrtint (int a)
 static void wma_lsp_to_curve_init(WMACodecContext *s, int frame_len);
 
 #ifdef TRACE
-static void dump_shorts(WMACodecContext *s, const char *name, const short *tab, int n)
+static void dump_shorts(WMACodecContext *s, const char *name, const uint8_t *tab, int n)
 {
     int i;
 
@@ -263,7 +206,7 @@ static void dump_shorts(WMACodecContext *s, const char *name, const short *tab, 
     for(i=0;i<n;i++) {
         if ((i & 7) == 0)
             tprintf(s->avctx, "%4d: ", i);
-        tprintf(s->avctx, " %5d.0", tab[i]);
+        tprintf(s->avctx, " %02X %02X", tab[2*i],tab[2*i+1]);
         if ((i & 7) == 7)
             tprintf(s->avctx, "\n");
     }
@@ -286,6 +229,12 @@ static void dump_floats(WMACodecContext *s, const char *name, int prec, const fl
 }
 #endif
 
+void (*ff_imdct_half_fixed)(MDCTContextFix *s, int *outputfix,
+                   const int *input);
+void ff_imdct_half_fixed_4740(MDCTContextFix *s, int *outputfix,
+                   const int *input);
+void ff_imdct_half_fixed_4750(MDCTContextFix *s, int *outputfix,
+                   const int *input);
 static int wma_decode_init(AVCodecContext * avctx)
 {
     WMACodecContext *s = avctx->priv_data;
@@ -315,6 +264,11 @@ static int wma_decode_init(AVCodecContext * avctx)
     if(ff_wma_init(avctx, flags2)<0)
         return -1;
 
+    if(jz_cpu_type_id>=CPU_ID_JZ4750){
+        ff_imdct_half_fixed=ff_imdct_half_fixed_4750;
+    }else{
+        ff_imdct_half_fixed=ff_imdct_half_fixed_4740;
+    }
     /* init MDCT */
     for(i = 0; i < s->nb_block_sizes; i++)
         ff_mdct_init_fixed(&s->mdct_ctx[i], s->frame_len_bits - i + 1, 1);
@@ -342,9 +296,9 @@ static int wma_decode_init(AVCodecContext * avctx)
  * expense (linear interpolation approximately doubles the number of
  * bits of precision).
  */
+#if 0
 static inline float pow_m1_4(WMACodecContext *s, float x)
 {
-#if 0   // Daniel
     union {
         float f;
         unsigned int v;
@@ -360,18 +314,80 @@ static inline float pow_m1_4(WMACodecContext *s, float x)
     a = s->lsp_pow_m_table1[m];
     b = s->lsp_pow_m_table2[m];
     return s->lsp_pow_e_table[e] * (a + b * t.f);
-#endif
 }
+#else
+
+#include "pow_m1_4_2k.h"
+
+static inline int pow_m1_4_fix16(WMACodecContext *s, int fixa) // fixa ^ -0.25
+{
+  unsigned int min, max, mid, mid2, result;
+  long long fixa_res, mid2_res, fix1=0x4000000000000000ll;
+  float f;
+  
+  if (fixa <= 0)
+    return 0;
+  
+  if (fixa < 65536)
+  {
+    fixa_res = (long long)fixa << (62 - 16);
+    min = 1;
+    max = 65536;
+    while (max > min)
+    {
+      mid = (min + max) / 2;
+      mid2 = (mid * mid) >> 1;
+      mid2_res = (long long) mid2 * mid2;
+      if (mid2_res >= fixa_res)
+        max = mid;
+      else
+  	min = mid;
+  			
+      if (max - min == 1)
+    	 break;
+    }
+  }
+  else
+  {
+    fixa_res = (long long)fixa << 16;
+    min = 1;
+    max = (1 << 20);
+  
+    while (max > min)
+    {
+      mid = (min + max) / 2;
+      mid2_res = (long long)mid * mid;
+      if (mid2_res >= fixa_res)
+        max = mid;
+      else 
+      {
+    	mid2 = (unsigned int)(mid2_res >> 16);
+    	if ((long long)mid2 * mid2 >= fixa_res)
+    	  max = mid;
+    	else
+          min = mid;
+      }
+      if (max - min == 1)
+    	break;
+    }
+  }
+    
+  fix1 = fix1 / (min);
+  result = (int)(fix1 >> 30);
+  if (fixa < 2048)
+    return (int)result + pow_m1_4diff[fixa];
+  else
+    return (int)result + 1;    // to improve precision
+}
+#endif
 
 static void wma_lsp_to_curve_init(WMACodecContext *s, int frame_len)
 {
     float wdel, a, b;
     int i, e, m;
-
-#if 0 // Daniel
     wdel = M_PI / frame_len;
     for(i=0;i<frame_len;i++)
-        s->lsp_cos_table[i] = 2.0f * cos(wdel * i);
+        s->lspfix_cos_table[i] = FIXED16(2.0f * cos(wdel * i));
 
     /* tables for x^-0.25 computation */
     for(i=0;i<256;i++) {
@@ -399,7 +415,6 @@ static void wma_lsp_to_curve_init(WMACodecContext *s, int frame_len)
         printf("%f^-0.25=%f e=%f\n", v, r1, r2 - r1);
     }
 #endif
-#endif
 }
 
 /**
@@ -407,32 +422,31 @@ static void wma_lsp_to_curve_init(WMACodecContext *s, int frame_len)
  * @todo optimize it further with SSE/3Dnow
  */
 static void wma_lsp_to_curve(WMACodecContext *s,
-                             float *out, float *val_max_ptr,
-                             int n, float *lsp)
+                             int *out, int *val_max_ptr,
+                             int n, int *lsp)
 {
     int i, j;
-    float p, q, w, v, val_max;
-
-#if 0 // Daniel
+    int p, q, w, vfix;
+    int v, val_max;
+    
     val_max = 0;
     for(i=0;i<n;i++) {
-        p = 0.5f;
-        q = 0.5f;
-        w = s->lsp_cos_table[i];
+        p = 0x8000;
+        q = 0x8000;
+        w = s->lspfix_cos_table[i];
         for(j=1;j<NB_LSP_COEFS;j+=2){
-            q *= w - lsp[j - 1];
-            p *= w - lsp[j];
+            q = FIX_MULT16(q, (w - lsp[j - 1]));
+            p = FIX_MULT16(p, (w - lsp[j]));
         }
-        p *= p * (2.0f - w);
-        q *= q * (2.0f + w);
-        v = p + q;
-        v = pow_m1_4(s, v);
+        p = FIX_MULT16(p, FIX_MULT16(p, (0x20000 - w)));
+        q = FIX_MULT16(q, FIX_MULT16(q, (0x20000 + w)));
+        vfix = p + q;
+        v = pow_m1_4_fix16(s, vfix);
         if (v > val_max)
             val_max = v;
         out[i] = v;
     }
     *val_max_ptr = val_max;
-#endif
 }
 
 /**
@@ -440,7 +454,7 @@ static void wma_lsp_to_curve(WMACodecContext *s,
  */
 static void decode_exp_lsp(WMACodecContext *s, int ch)
 {
-    float lsp_coefs[NB_LSP_COEFS];
+    int lsp_coefs[NB_LSP_COEFS];
     int val, i;
 
     for(i = 0; i < NB_LSP_COEFS; i++) {
@@ -448,13 +462,11 @@ static void decode_exp_lsp(WMACodecContext *s, int ch)
             val = get_bits(&s->gb, 3);
         else
             val = get_bits(&s->gb, 4);
-        lsp_coefs[i] = ff_wma_lsp_codebook[i][val];
+        lsp_coefs[i] = ff_wma_lspfix_codebook[i][val];
     }
 
-#if 0 // daniel  temporary compiling error
-    wma_lsp_to_curve(s, s->exponents[ch], &s->max_exponent[ch],
+    wma_lsp_to_curve(s, s->exponents_fix[ch], &s->max_exponent_fix[ch],
                      s->block_len, lsp_coefs);
-#endif
 }
 
 /**
@@ -474,12 +486,14 @@ static int decode_exp_vlc(WMACodecContext *s, int ch)
     if (s->version == 1) {
         last_exp = get_bits(&s->gb, 5) + 10;
         /* XXX: use a table */
-        if (last_exp < 64)
-          v = tablefix_10exp1div16[last_exp];
-        else
-        {
-          v = (int)(pow(10, last_exp * (1.0 / 16.0)) * (1 << FRAC_BIT));
-          printf (" ++++ found error last_exp = %d +++\n", last_exp);
+        if (last_exp < 0){
+            v = 0;
+        }else if (last_exp < 64){
+          v = tablefix16_10exp1div16[last_exp];
+        }else {
+          v = tablefix16_10exp1div16[63];
+          //v = (int)(pow(10, last_exp * (1.0 / 16.0)) * (1 << FRAC_BIT));
+          printf (" ++++ found error last_exp(1) = %d +++\n", last_exp);
         }
         max_scale = v;
         n = *ptr++;
@@ -496,12 +510,14 @@ static int decode_exp_vlc(WMACodecContext *s, int ch)
         /* NOTE: this offset is the same as MPEG4 AAC ! */
         last_exp += code - 60;
         /* XXX: use a table */
-        if (last_exp < 64)
-          v = tablefix_10exp1div16[last_exp];
-        else
-        {
-          v = (int)(pow(10, last_exp * (1.0 / 16.0)) * (1 << FRAC_BIT));
-          printf (" ++++ found error last_exp = %d +++\n", last_exp);
+        if(last_exp < 0){
+          v = 0;
+        }else if (last_exp < 64){
+          v = tablefix16_10exp1div16[last_exp];
+        }else {
+          v = tablefix16_10exp1div16[63];
+          //v = (int)(pow(10, last_exp * (1.0 / 16.0)) * (1 << FRAC_BIT));
+          printf (" ++++ found error last_exp(2) = %d +++\n", last_exp);
         }
         if (v > max_scale)
             max_scale = v;
@@ -510,7 +526,7 @@ static int decode_exp_vlc(WMACodecContext *s, int ch)
             *q++ = v;
         } while (--n);
     }
-    s->max_exponent_fix[ch] = max_scale;
+    s->max_exponent_fix[ch] = (max_scale > 0) ? max_scale : 1;
     return 0;
 }
 
@@ -532,7 +548,7 @@ static void wma_window(WMACodecContext *s, int *outfix)
 
 #ifdef JZ47_OPT
         for (i = 0; i < block_len; i++)
-          outfix[i] = FIX_MULT(infix[i], s->windowsfix[bsize][i])  + outfix[i];
+          outfix[i] = FIX_MULT16(infix[i], s->windowsfix[bsize][i])  + outfix[i];
 #else
         s->dsp.vector_fmul_add_add(out, in, s->windows[bsize],
                                    out, 0, block_len, 1);
@@ -544,7 +560,7 @@ static void wma_window(WMACodecContext *s, int *outfix)
 
 #ifdef JZ47_OPT
         for (i = 0; i < block_len; i++)
-          outfix[i+n] = FIX_MULT(infix[i+n], s->windowsfix[bsize][i])  + outfix[i+n];
+          outfix[i+n] = FIX_MULT16(infix[i+n], s->windowsfix[bsize][i])  + outfix[i+n];
 #else
         s->dsp.vector_fmul_add_add(out+n, in+n, s->windows[bsize],
                                    out+n, 0, block_len, 1);
@@ -568,7 +584,7 @@ static void wma_window(WMACodecContext *s, int *outfix)
 #ifdef JZ47_OPT
         for (i = 0; i < block_len; i++) 
         {  
-          outfix[i] = FIX_MULT(infix[i], s->windowsfix[bsize][block_len - 1 - i]);
+          outfix[i] = FIX_MULT16(infix[i], s->windowsfix[bsize][block_len - 1 - i]);
         }
 #else
         s->dsp.vector_fmul_reverse(out, in, s->windows[bsize], block_len);
@@ -582,7 +598,7 @@ static void wma_window(WMACodecContext *s, int *outfix)
         memcpy(outfix, infix, n*sizeof(int));
 
         for (i = 0; i < block_len; i++) 
-          outfix[n + i] = FIX_MULT(infix[i + n], s->windowsfix[bsize][block_len - 1 - i]);
+          outfix[n + i] = FIX_MULT16(infix[i + n], s->windowsfix[bsize][block_len - 1 - i]);
 
         memset(outfix+n+block_len, 0, n*sizeof(int));
     }
@@ -590,110 +606,66 @@ static void wma_window(WMACodecContext *s, int *outfix)
 
 
 /* butter fly op */
-#define BF(pre, pim, qre, qim, pre1, pim1, qre1, qim1) \
-{\
-  int ax, ay, bx, by;\
-  bx=pre1;\
-  by=pim1;\
-  ax=qre1;\
-  ay=qim1;\
-  pre = (bx + ax);\
-  pim = (by + ay);\
-  qre = (bx - ax);\
-  qim = (by - ay);\
-}
-
 #define MUL16(a,b) ((a) * (b))
-
-#define CMUL(pre, pim, are, aim, bre, bim) \
-{\
-   pre = (FIX_MULT(are, bre) - FIX_MULT(aim, bim));\
-   pim = (FIX_MULT(are, bim) + FIX_MULT(bre, aim));\
-}
-
-/**
- * Do a complex FFT with the parameters defined in ff_fft_init(). The
- * input data must be permuted before with s->revtab table. No
- * 1.0/sqrt(n) normalization is done.
- */
-void ff_fft_calc_fixed(FFTContextFix *s, FFTComplexFix *z)
+void Calc_cmul_4750(FFTComplexFix *z,int are, int aim, int bre, int bim)
 {
-    int ln = s->nbits;
-    int j, np, np2;
-    int nblocks, nloops;
-    register FFTComplexFix *p, *q;
-    FFTComplexFix *exptab = s->exptab;
-    int l;
-    int tmp_refix, tmp_imfix;
-
-    np = 1 << ln;
-
-    /* pass 0 */
-
-    p=&z[0];
-    j=(np >> 1);
-    do {
-        BF(p[0].refix, p[0].imfix, p[1].refix, p[1].imfix,
-           p[0].refix, p[0].imfix, p[1].refix, p[1].imfix);
-        p+=2;
-    } while (--j != 0);
-
-    /* pass 1 */
-
-
-    p=&z[0];
-    j=np >> 2;
-    if (s->inverse) {
-        do {
-            BF(p[0].refix, p[0].imfix, p[2].refix, p[2].imfix,
-               p[0].refix, p[0].imfix, p[2].refix, p[2].imfix);
-            BF(p[1].refix, p[1].imfix, p[3].refix, p[3].imfix,
-               p[1].refix, p[1].imfix, -p[3].imfix, p[3].refix);
-            p+=4;
-        } while (--j != 0);
-    } else {
-        do {
-            BF(p[0].refix, p[0].imfix, p[2].refix, p[2].imfix,
-               p[0].refix, p[0].imfix, p[2].refix, p[2].imfix);
-            BF(p[1].refix, p[1].imfix, p[3].refix, p[3].imfix,
-               p[1].refix, p[1].imfix, p[3].imfix, -p[3].refix);
-            p+=4;
-        } while (--j != 0);
-    }
-    /* pass 2 .. ln-1 */
-
-    nblocks = np >> 3;
-    nloops = 1 << 2;
-    np2 = np >> 1;
-    do {
-        p = z;
-        q = z + nloops;
-        for (j = 0; j < nblocks; ++j) {
-            BF(p->refix, p->imfix, q->refix, q->imfix,
-               p->refix, p->imfix, q->refix, q->imfix);
-
-            p++;
-            q++;
-            for(l = nblocks; l < np2; l += nblocks) {
-                CMUL(tmp_refix, tmp_imfix, exptab[l].refix, exptab[l].imfix, q->refix, q->imfix);
-                BF(p->refix, p->imfix, q->refix, q->imfix,
-                   p->refix, p->imfix, tmp_refix, tmp_imfix);
-                p++;
-                q++;
-            }
-
-            p += nloops;
-            q += nloops;
-        }
-        nblocks = nblocks >> 1;
-        nloops = nloops << 1;
-    } while (nblocks != 0);
+   S32MUL(xr1,xr2,(are), (bre));                       
+   S32MSUB(xr1,xr2,(aim),(bim));                       
+   S32MUL(xr3,xr4,(are),(bim));                        
+   S32MADD(xr3,xr4,(bre),(aim));                       
+   D32SLL(xr1,xr1,xr3,xr3,1);
+   z->refix = S32M2I(xr1);                                  
+   z->imfix = S32M2I(xr3);                                  
 }
+void Calc_cmul_4740(FFTComplexFix *z,int are, int aim, int bre, int bim)
+{
+  long hi;
+  unsigned long lo;
+  asm __volatile("mult %1,%3\n"              
+      "msub %2,%4\n"                         
+      "mfhi %0\n"                            
+      :"=d"(hi)                     
+      :"r"(are),"r"(aim), "r"(bre), "r"(bim) 
+      :"hi","lo");                           
+  z->refix=(hi<<1);                   
+  asm __volatile("mult %1,%4\n"              
+      "madd %2,%3\n"                         
+      "mfhi %0\n"                            
+      :"=d"(hi)                     
+      :"r"(are),"r"(aim), "r"(bre), "r"(bim) 
+      :"hi","lo");                           
+  z->imfix=(hi<<1);                   
+
+}
+
 
 /**
  * The size of the FFT is 2^nbits. If inverse is TRUE, inverse FFT is
  * done
  */
+/* cos(2*pi*x/n) for 0<=x<=n/4, followed by its reverse */
+int32_t ff_cos_16[8];
+int32_t ff_cos_32[16];
+int32_t ff_cos_64[32];
+int32_t ff_cos_128[64];
+int32_t ff_cos_256[128];
+int32_t ff_cos_512[256];
+int32_t ff_cos_1024[512];
+int32_t *ff_cos_tabs[] = {
+    ff_cos_16, ff_cos_32, ff_cos_64, ff_cos_128, ff_cos_256, ff_cos_512, ff_cos_1024
+};
+
+static int split_radix_permutation(int i, int n, int inverse)
+{
+    int m;
+    if(n <= 2) return i&1;
+    m = n >> 1;
+    if(!(i&m))            return split_radix_permutation(i, m, inverse)*2;
+    m >>= 1;
+    if(inverse == !(i&m)) return split_radix_permutation(i, m, inverse)*4 + 1;
+    else                  return split_radix_permutation(i, m, inverse)*4 - 1;
+}
+
 int ff_fft_init_fixed(FFTContextFix *s, int nbits, int inverse)
 {
     int i, j, m, n;
@@ -712,24 +684,20 @@ int ff_fft_init_fixed(FFTContextFix *s, int nbits, int inverse)
 
     s2 = inverse ? 1.0 : -1.0;
 
-    for(i=0;i<(n/2);i++) {
-        alpha = 2 * M_PI * (float)i / (float)n;
-        c1 = cos(alpha);
-        s1 = sin(alpha) * s2;
-        s->exptab[i].refix = FIXED(c1);
-        s->exptab[i].imfix = FIXED(s1);
-    }
     s->exptab1 = NULL;
 
-    /* compute bit reverse table */
-
-    for(i=0;i<n;i++) {
-        m=0;
-        for(j=0;j<nbits;j++) {
-            m |= ((i >> j) & 1) << (nbits-j-1);
-        }
-        s->revtab[i]=m;
+    for(j=4; j<=nbits; j++) {
+        int m = 1<<j;
+        double freq = 2*M_PI/m;
+        int32_t *tab = ff_cos_tabs[j-4];
+        for(i=0; i<=m/4; i++)
+            tab[i] = FIXED31(cos(i*freq));
+        for(i=1; i<m/4; i++)
+            tab[m/2-i] = tab[i];
     }
+    for(i=0; i<n; i++)
+        s->revtab[-split_radix_permutation(i, n, s->inverse) & (n-1)] = i;
+
     return 0;
  fail:
     av_freep(&s->revtab);
@@ -737,7 +705,6 @@ int ff_fft_init_fixed(FFTContextFix *s, int nbits, int inverse)
     av_freep(&s->exptab1);
     return -1;
 }
-
 
 void ff_fft_end_fixed(FFTContextFix *s)
 {
@@ -747,34 +714,207 @@ void ff_fft_end_fixed(FFTContextFix *s)
 }
 
 
-#undef CMUL
-
-/* complex multiplication: p = a * b */
-#define CMUL(pre, pim, are, aim, bre, bim) \
-{\
-    int _are = (are);\
-    int _aim = (aim);\
-    int _bre = (bre);\
-    int _bim = (bim);\
-    (pre) = FIX_MULT(_are , _bre) - FIX_MULT(_aim , _bim);\
-    (pim) = FIX_MULT(_are , _bim) + FIX_MULT(_aim , _bre);\
-}
-
 /**
  * Compute inverse MDCT of size N = 2^nbits
  * @param output N samples
  * @param input N/2 samples
  * @param tmp N/2 samples
  */
-void ff_imdct_calc_fixed(MDCTContextFix *s, int *outputfix,
-                   const int *input, FFTSample *tmp)
+
+/**
+ * Do a complex FFT with the parameters defined in ff_fft_init(). The
+ * input data must be permuted before with s->revtab table. No
+ * 1.0/sqrt(n) normalization is done.
+ */
+
+#define M_SQRT1_2_FIX      1518500249/* (1/sqrt(2))*((1<<31)-1) */
+#define BF(x,y,a,b) {\
+    x = a - b;\
+    y = a + b;\
+}
+
+#define BUTTERFLIES(a0,a1,a2,a3) {\
+    BF(t3, t5, t5, t1);\
+    BF(a2.refix, a0.refix, a0.refix, t5);\
+    BF(a3.imfix, a1.imfix, a1.imfix, t3);\
+    BF(t4, t6, t2, t6);\
+    BF(a3.refix, a1.refix, a1.refix, t4);\
+    BF(a2.imfix, a0.imfix, a0.imfix, t6);\
+}
+
+// force loading all the inputs before storing any.
+// this is slightly slower for small data, but avoids store->load aliasing
+// for addresses separated by large powers of 2.
+#define BUTTERFLIES_BIG(a0,a1,a2,a3) {\
+    int32_t r0=a0.refix, i0=a0.imfix, r1=a1.refix, i1=a1.imfix;\
+    BF(t3, t5, t5, t1);\
+    BF(a2.refix, a0.refix, r0, t5);\
+    BF(a3.imfix, a1.imfix, i1, t3);\
+    BF(t4, t6, t2, t6);\
+    BF(a3.refix, a1.refix, r1, t4);\
+    BF(a2.imfix, a0.imfix, i0, t6);\
+}
+
+#if 0
+#define TRANSFORM(a0,a1,a2,a3,wre,wim) {\
+    t1 = FIX_MULT31(a2.refix , wre) + FIX_MULT31(a2.imfix , wim);\
+    t2 = FIX_MULT31(a2.imfix , wre) - FIX_MULT31(a2.refix , wim);\
+    t5 = FIX_MULT31(a3.refix , wre) - FIX_MULT31(a3.imfix , wim);\
+    t6 = FIX_MULT31(a3.imfix , wre) + FIX_MULT31(a3.refix , wim);\
+    BUTTERFLIES(a0,a1,a2,a3)\
+}
+#else
+#define TRANSFORM(a0,a1,a2,a3,wre,wim) {\
+  long hi;                                            \
+  asm __volatile("mult %1,%3\n"                       \
+      "madd %2,%4\n"                                  \
+      "mfhi %0\n"                                     \
+      :"=d"(hi)                                       \
+      :"r"(a2.refix),"r"(a2.imfix), "r"(wre), "r"(wim)\
+      :"hi","lo");                                    \
+  t1=(hi<<1);                                         \
+  asm __volatile("mult %2,%3\n"                       \
+      "msub %1,%4\n"                                  \
+      "mfhi %0\n"                                     \
+      :"=d"(hi)                                       \
+      :"r"(a2.refix),"r"(a2.imfix), "r"(wre), "r"(wim)\
+      :"hi","lo");                                    \
+  t2=(hi<<1);                                         \
+  asm __volatile("mult %1,%3\n"                       \
+      "msub %2,%4\n"                                  \
+      "mfhi %0\n"                                     \
+      :"=d"(hi)                                       \
+      :"r"(a3.refix),"r"(a3.imfix), "r"(wre), "r"(wim)\
+      :"hi","lo");                                    \
+  t5=(hi<<1);                                         \
+  asm __volatile("mult %2,%3\n"                       \
+      "madd %1,%4\n"                                  \
+      "mfhi %0\n"                                     \
+      :"=d"(hi)                                       \
+      :"r"(a3.refix),"r"(a3.imfix), "r"(wre), "r"(wim)\
+      :"hi","lo");                                    \ 
+  t6=(hi<<1);                                         \
+    BUTTERFLIES(a0,a1,a2,a3)\
+}
+#endif
+#define TRANSFORM_ZERO(a0,a1,a2,a3) {\
+    t1 = a2.refix;\
+    t2 = a2.imfix;\
+    t5 = a3.refix;\
+    t6 = a3.imfix;\
+    BUTTERFLIES(a0,a1,a2,a3)\
+}
+
+/* z[0...8n-1], w[1...2n-1] */
+#define PASS(name)\
+static void name(FFTComplexFix *z, const int32_t *wre, unsigned int n)\
+{\
+    int32_t t1, t2, t3, t4, t5, t6;\
+    int o1 = 2*n;\
+    int o2 = 4*n;\
+    int o3 = 6*n;\
+    const int32_t *wim = wre+o1;\
+    n--;\
+\
+    TRANSFORM_ZERO(z[0],z[o1],z[o2],z[o3]);\
+    TRANSFORM(z[1],z[o1+1],z[o2+1],z[o3+1],wre[1],wim[-1]);\
+    do {\
+        z += 2;\
+        wre += 2;\
+        wim -= 2;\
+        TRANSFORM(z[0],z[o1],z[o2],z[o3],wre[0],wim[0]);\
+        TRANSFORM(z[1],z[o1+1],z[o2+1],z[o3+1],wre[1],wim[-1]);\
+    } while(--n);\
+}
+
+PASS(pass_4740)
+#undef BUTTERFLIES
+#define BUTTERFLIES BUTTERFLIES_BIG
+PASS(pass_big_4740)
+
+#define DECL_FFT(n,n2,n4)\
+static void fft##n##_4740(FFTComplexFix *z)\
+{\
+    fft##n2##_4740(z);\
+    fft##n4##_4740(z+n4*2);\
+    fft##n4##_4740(z+n4*3);\
+    pass_4740(z,ff_cos_##n,n4/2);\
+}
+
+
+ 
+static void fft4_4740(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6, t7, t8;
+
+    BF(t3, t1, z[0].refix, z[1].refix);
+    BF(t8, t6, z[3].refix, z[2].refix);
+    BF(z[2].refix, z[0].refix, t1, t6);
+    BF(t4, t2, z[0].imfix, z[1].imfix);
+    BF(t7, t5, z[2].imfix, z[3].imfix);
+    BF(z[3].imfix, z[1].imfix, t4, t8);
+    BF(z[3].refix, z[1].refix, t3, t7);
+    BF(z[2].imfix, z[0].imfix, t2, t5);
+}
+
+
+static void fft8_4740(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6, t7, t8;
+
+    fft4_4740(z);
+
+    BF(t1, z[5].refix, z[4].refix, -z[5].refix);
+    BF(t2, z[5].imfix, z[4].imfix, -z[5].imfix);
+    BF(t3, z[7].refix, z[6].refix, -z[7].refix);
+    BF(t4, z[7].imfix, z[6].imfix, -z[7].imfix);
+    BF(t8, t1, t3, t1);
+    BF(t7, t2, t2, t4);
+    BF(z[4].refix, z[0].refix, z[0].refix, t1);
+    BF(z[4].imfix, z[0].imfix, z[0].imfix, t2);
+    BF(z[6].refix, z[2].refix, z[2].refix, t7);
+    BF(z[6].imfix, z[2].imfix, z[2].imfix, t8);
+
+    TRANSFORM(z[1],z[3],z[5],z[7],M_SQRT1_2_FIX,M_SQRT1_2_FIX);
+}
+static void fft16_4740(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6;
+
+    fft8_4740(z);
+    fft4_4740(z+8);
+    fft4_4740(z+12);
+
+    TRANSFORM_ZERO(z[0],z[4],z[8],z[12]);
+    TRANSFORM(z[2],z[6],z[10],z[14],M_SQRT1_2_FIX,M_SQRT1_2_FIX);
+    TRANSFORM(z[1],z[5],z[9],z[13],ff_cos_16[1],ff_cos_16[3]);
+    TRANSFORM(z[3],z[7],z[11],z[15],ff_cos_16[3],ff_cos_16[1]);
+}
+DECL_FFT(32,16,8)
+DECL_FFT(64,32,16)
+DECL_FFT(128,64,32)
+DECL_FFT(256,128,64)
+DECL_FFT(512,256,128)
+#define pass_4740 pass_big_4740
+DECL_FFT(1024,512,256)
+
+static void (*fft_dispatch_4740[])(FFTComplexFix*) = {
+    fft4_4740, fft8_4740, fft16_4740, fft32_4740, fft64_4740, fft128_4740, fft256_4740, fft512_4740, fft1024_4740
+};
+
+void ff_fft_calc_fixed_4740(FFTContextFix *s, FFTComplexFix *z)
+{
+    fft_dispatch_4740[s->nbits-2](z);
+}
+void ff_imdct_half_fixed_4740(MDCTContextFix *s, int *outputfix,
+                   const int *input)
 {
     int k, n8, n4, n2, n, j;
     const uint16_t *revtab = s->fft.revtab;
-    const int *tcosfix = s->tcosfix;
-    const int *tsinfix = s->tsinfix;
+    const int *tcosfix;
+    const int *tsinfix;
     const int *in1, *in2;
-    FFTComplexFix *z = (FFTComplexFix *)tmp;
+    FFTComplexFix *z = (FFTComplexFix *)outputfix;
 
     n = 1 << s->nbits;
     n2 = n >> 1;
@@ -782,38 +922,221 @@ void ff_imdct_calc_fixed(MDCTContextFix *s, int *outputfix,
     n8 = n >> 3;
 
     /* pre rotation */
+    tcosfix = s->tcosfix;
+    tsinfix = s->tsinfix;
     in1 = input;
     in2 = input + n2 - 1;
     for(k = 0; k < n4; k++) {
         j=revtab[k];
-        CMUL(z[j].refix, z[j].imfix, *in2, *in1, tcosfix[k], tsinfix[k]);
+        Calc_cmul_4740(z+j, *in2, *in1, tcosfix[k], tsinfix[k]);
         in1 += 2;
         in2 -= 2;
     }
-
-    ff_fft_calc_fixed(&s->fft, z);
+    ff_fft_calc_fixed_4740(&s->fft, z);
 
     /* post rotation + reordering */
     /* XXX: optimize */
-    for(k = 0; k < n4; k++) {
-        CMUL(z[k].refix, z[k].imfix, z[k].refix, z[k].imfix, tcosfix[k], tsinfix[k]);
-    }
-
     for(k = 0; k < n8; k++) {
-        outputfix[2*k] = -z[n8 + k].imfix;
-        outputfix[n2-1-2*k] = z[n8 + k].imfix;
-
-        outputfix[2*k+1] = z[n8-1-k].refix;
-        outputfix[n2-1-2*k-1] = -z[n8-1-k].refix;
-
-        outputfix[n2 + 2*k]=-z[k+n8].refix;
-        outputfix[n-1- 2*k]=-z[k+n8].refix;
-
-        outputfix[n2 + 2*k+1]=z[n8-k-1].imfix;
-        outputfix[n-2 - 2 * k] = z[n8-k-1].imfix;
+        FFTComplexFix tmpz[2];
+        Calc_cmul_4740(tmpz, z[n8-k-1].imfix, z[n8-k-1].refix, tsinfix[n8-k-1], tcosfix[n8-k-1]);
+        Calc_cmul_4740(tmpz+1, z[n8+k  ].imfix, z[n8+k  ].refix, tsinfix[n8+k  ], tcosfix[n8+k  ]);
+        z[n8-k-1].refix = tmpz[0].refix;
+        z[n8-k-1].imfix = tmpz[1].imfix;
+        z[n8+k  ].refix = tmpz[1].refix;
+        z[n8+k  ].imfix = tmpz[0].imfix;
     }
+
+}
+#undef TRANSFORM
+#if 0
+#define TRANSFORM(a0,a1,a2,a3,wre,wim) {\
+    t1 = FIX_MULT31(a2.refix , wre) + FIX_MULT31(a2.imfix , wim);\
+    t2 = FIX_MULT31(a2.imfix , wre) - FIX_MULT31(a2.refix , wim);\
+    t5 = FIX_MULT31(a3.refix , wre) - FIX_MULT31(a3.imfix , wim);\
+    t6 = FIX_MULT31(a3.imfix , wre) + FIX_MULT31(a3.refix , wim);\
+    BUTTERFLIES(a0,a1,a2,a3)\
+}
+#else
+#define TRANSFORM(a0,a1,a2,a3,wre,wim) {\
+   S32MUL(xr1,xr2,(a2.refix), (wre));   \                    
+   S32MADD(xr1,xr2,(a2.imfix),(wim));   \                   
+   S32MUL(xr3,xr4,(a2.imfix),(wre));    \                   
+   S32MSUB(xr3,xr4,(a2.refix),(wim));    \                  
+   D32SLL(xr1,xr1,xr3,xr3,1);           \
+   t1=S32M2I(xr1);                      \
+   t2=S32M2I(xr3);                      \
+   S32MUL(xr1,xr2,(a3.refix), (wre));   \                 
+   S32MSUB(xr1,xr2,(a3.imfix),(wim));   \                   
+   S32MUL(xr3,xr4,(a3.imfix),(wre));    \                   
+   S32MADD(xr3,xr4,(a3.refix),(wim));   \                   
+   D32SLL(xr1,xr1,xr3,xr3,1);           \
+   t5 = S32M2I(xr1);                    \             
+   t6 = S32M2I(xr3);                    \             
+    BUTTERFLIES(a0,a1,a2,a3)\
+}
+#endif
+
+
+/* z[0...8n-1], w[1...2n-1] */
+#define PASS(name)\
+static void name(FFTComplexFix *z, const int32_t *wre, unsigned int n)\
+{\
+    int32_t t1, t2, t3, t4, t5, t6;\
+    int o1 = 2*n;\
+    int o2 = 4*n;\
+    int o3 = 6*n;\
+    const int32_t *wim = wre+o1;\
+    n--;\
+\
+    TRANSFORM_ZERO(z[0],z[o1],z[o2],z[o3]);\
+    TRANSFORM(z[1],z[o1+1],z[o2+1],z[o3+1],wre[1],wim[-1]);\
+    do {\
+        z += 2;\
+        wre += 2;\
+        wim -= 2;\
+        TRANSFORM(z[0],z[o1],z[o2],z[o3],wre[0],wim[0]);\
+        TRANSFORM(z[1],z[o1+1],z[o2+1],z[o3+1],wre[1],wim[-1]);\
+    } while(--n);\
 }
 
+PASS(pass_4750)
+#undef BUTTERFLIES
+#define BUTTERFLIES BUTTERFLIES_BIG
+PASS(pass_big_4750)
+
+#undef DECL_FFT
+#define DECL_FFT(n,n2,n4)\
+static void fft##n##_4750(FFTComplexFix *z)\
+{\
+    fft##n2##_4750(z);\
+    fft##n4##_4750(z+n4*2);\
+    fft##n4##_4750(z+n4*3);\
+    pass_4750(z,ff_cos_##n,n4/2);\
+}
+
+
+static void fft4_4750(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6, t7, t8;
+
+    BF(t3, t1, z[0].refix, z[1].refix);
+    BF(t8, t6, z[3].refix, z[2].refix);
+    BF(z[2].refix, z[0].refix, t1, t6);
+    BF(t4, t2, z[0].imfix, z[1].imfix);
+    BF(t7, t5, z[2].imfix, z[3].imfix);
+    BF(z[3].imfix, z[1].imfix, t4, t8);
+    BF(z[3].refix, z[1].refix, t3, t7);
+    BF(z[2].imfix, z[0].imfix, t2, t5);
+}
+
+
+static void fft8_4750(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6, t7, t8;
+
+    fft4_4750(z);
+
+    BF(t1, z[5].refix, z[4].refix, -z[5].refix);
+    BF(t2, z[5].imfix, z[4].imfix, -z[5].imfix);
+    BF(t3, z[7].refix, z[6].refix, -z[7].refix);
+    BF(t4, z[7].imfix, z[6].imfix, -z[7].imfix);
+    BF(t8, t1, t3, t1);
+    BF(t7, t2, t2, t4);
+    BF(z[4].refix, z[0].refix, z[0].refix, t1);
+    BF(z[4].imfix, z[0].imfix, z[0].imfix, t2);
+    BF(z[6].refix, z[2].refix, z[2].refix, t7);
+    BF(z[6].imfix, z[2].imfix, z[2].imfix, t8);
+
+    TRANSFORM(z[1],z[3],z[5],z[7],M_SQRT1_2_FIX,M_SQRT1_2_FIX);
+}
+static void fft16_4750(FFTComplexFix *z)
+{
+    int32_t t1, t2, t3, t4, t5, t6;
+
+    fft8_4750(z);
+    fft4_4750(z+8);
+    fft4_4750(z+12);
+
+    TRANSFORM_ZERO(z[0],z[4],z[8],z[12]);
+    TRANSFORM(z[2],z[6],z[10],z[14],M_SQRT1_2_FIX,M_SQRT1_2_FIX);
+    TRANSFORM(z[1],z[5],z[9],z[13],ff_cos_16[1],ff_cos_16[3]);
+    TRANSFORM(z[3],z[7],z[11],z[15],ff_cos_16[3],ff_cos_16[1]);
+}
+DECL_FFT(32,16,8)
+DECL_FFT(64,32,16)
+DECL_FFT(128,64,32)
+DECL_FFT(256,128,64)
+DECL_FFT(512,256,128)
+#define pass_4750 pass_big_4750
+DECL_FFT(1024,512,256)
+
+static void (*fft_dispatch_4750[])(FFTComplexFix*) = {
+    fft4_4750, fft8_4750, fft16_4750, fft32_4750, fft64_4750, fft128_4750, fft256_4750, fft512_4750, fft1024_4750
+};
+
+
+void ff_fft_calc_fixed_4750(FFTContextFix *s, FFTComplexFix *z)
+{
+    fft_dispatch_4750[s->nbits-2](z);
+}
+void ff_imdct_half_fixed_4750(MDCTContextFix *s, int *outputfix,
+                   const int *input)
+{
+    int k, n8, n4, n2, n, j;
+    const uint16_t *revtab = s->fft.revtab;
+    const int *tcosfix;
+    const int *tsinfix;
+    const int *in1, *in2;
+    FFTComplexFix *z = (FFTComplexFix *)outputfix;
+
+    n = 1 << s->nbits;
+    n2 = n >> 1;
+    n4 = n >> 2;
+    n8 = n >> 3;
+
+    /* pre rotation */
+    tcosfix = s->tcosfix;
+    tsinfix = s->tsinfix;
+    in1 = input;
+    in2 = input + n2 - 1;
+    for(k = 0; k < n4; k++) {
+        j=revtab[k];
+        Calc_cmul_4750(z+j, *in2, *in1, tcosfix[k], tsinfix[k]);
+        in1 += 2;
+        in2 -= 2;
+    }
+    ff_fft_calc_fixed_4750(&s->fft, z);
+
+    /* post rotation + reordering */
+    /* XXX: optimize */
+    for(k = 0; k < n8; k++) {
+        FFTComplexFix tmpz[2];
+        Calc_cmul_4750(tmpz, z[n8-k-1].imfix, z[n8-k-1].refix, tsinfix[n8-k-1], tcosfix[n8-k-1]);
+        Calc_cmul_4750(tmpz+1, z[n8+k  ].imfix, z[n8+k  ].refix, tsinfix[n8+k  ], tcosfix[n8+k  ]);
+        z[n8-k-1].refix = tmpz[0].refix;
+        z[n8-k-1].imfix = tmpz[1].imfix;
+        z[n8+k  ].refix = tmpz[1].refix;
+        z[n8+k  ].imfix = tmpz[0].imfix;
+    }
+
+}
+
+
+void ff_imdct_calc_fixed(MDCTContextFix *s, int *output,
+                   const int *input, FFTSample *tmp)
+{
+    int k;
+    int n = 1 << s->nbits;
+    int n2 = n >> 1;
+    int n4 = n >> 2;
+
+    ff_imdct_half_fixed(s, output+n4, input);
+
+    for(k = 0; k < n4; k++) {
+        output[k] = -output[n2-k-1];
+        output[n-k-1] = output[n2+k];
+    }
+}
 /**
  * init MDCT or IMDCT computation.
  */
@@ -837,9 +1160,9 @@ int ff_mdct_init_fixed(MDCTContextFix *s, int nbits, int inverse)
     for(i=0;i<n4;i++) {
         alpha = 2 * M_PI * (i + 1.0 / 8.0) / n;
         val = -cos(alpha);
-        s->tcosfix[i] = FIXED(val);
+        s->tcosfix[i] = FIXED31(val);
         val = -sin(alpha);
-        s->tsinfix[i] = FIXED(val);
+        s->tsinfix[i] = FIXED31(val);
     }
     if (ff_fft_init_fixed(&s->fft, s->nbits - 2, inverse) < 0)
         goto fail;
@@ -992,9 +1315,11 @@ static int wma_decode_block(WMACodecContext *s)
                 }
                 s->exponents_bsize[ch] = bsize;
             }
+            if (s->max_exponent_fix[ch] <= 0)
+              s->max_exponent_fix[ch] = 1;
         }
     }
-
+    
     /* parse spectral coefficients : just RLE encoding */
     for(ch = 0; ch < s->nb_channels; ch++) {
         if (s->channel_coded[ch]) {
@@ -1050,7 +1375,6 @@ static int wma_decode_block(WMACodecContext *s)
             align_get_bits(&s->gb);
         }
     }
-
     /* normalize */
     {
         int n4 = s->block_len / 2;
@@ -1059,8 +1383,7 @@ static int wma_decode_block(WMACodecContext *s)
             mdct_norm *= sqrt(n4);
         }
     }
-    mdct_norm_fix = (int)(mdct_norm * (1<<(FRAC_BIT*2)));
-
+    mdct_norm_fix = FIXED16(mdct_norm);
     /* finally compute the MDCT coefficients */
     for(ch = 0; ch < s->nb_channels; ch++) {
         if (s->channel_coded[ch]) {
@@ -1072,40 +1395,54 @@ static int wma_decode_block(WMACodecContext *s)
             coefs1 = s->coefs1[ch];
             exponents_fix = s->exponents_fix[ch];
             esize = s->exponents_bsize[ch];
-            mult_fix=FIX_DIV(fixedpow10(total_gain * 3277 /*0.05*/), s->max_exponent_fix[ch]);
-            mult_fix=FIXF2_MULT(mult_fix, mdct_norm_fix);
+            if (s->use_exp_vlc) {
+              mult_fix = FIX16_DIV(pow_table[total_gain], s->max_exponent_fix[ch]); //fixed16
+              mult_fix = FIX_MULT16(mult_fix, mdct_norm_fix); //fixed16
+            }
+            else
+            {
+            	long long tmp_fix;
+            	tmp_fix = (pow_table[total_gain] << 16) / (long long)s->max_exponent_fix[ch];
+            	mult_fix = (int)((tmp_fix * mdct_norm_fix) >> 16);
+            }
             coefs_fix = s->coefs_fix[ch];
             if (s->use_noise_coding) {
                 mult1_fix = mult_fix;
                 /* very low freqs : noise */
                 for(i = 0;i < s->coefs_start; i++) {
-                    *coefs_fix++ = FIX_MULT3(s->noise_table_fix[s->noise_index],
-                      exponents_fix[i<<bsize>>esize], mult1_fix);
+                    int tmp;
+                    //*coefs_fix++ = FIX_MULT3(s->noise_table_fix[s->noise_index],
+                    //  exponents_fix[i<<bsize>>esize], (mult1_fix >> 8));
+                    tmp = FIX_MULT16 (exponents_fix[i<<bsize>>esize], mult1_fix);
+                    tmp = FIX_MULT18 (tmp, s->noise_table_fix[s->noise_index]);  //fixed14
+                    *coefs_fix++ = (tmp >> 0); 
                     s->noise_index = (s->noise_index + 1) & (NOISE_TAB_SIZE - 1);
                 }
-
                 n1 = s->exponent_high_sizes[bsize];
-
                 /* compute power of high bands */
                 exponents_fix = s->exponents_fix[ch] +
                                 (s->high_band_start[bsize]<<bsize);
                 last_high_band = 0; /* avoid warning */
+                exp_power_fix[0] = 1;         //fixed16
                 for(j=0;j<n1;j++) {
                     n = s->exponent_high_bands[s->frame_len_bits -
                                               s->block_len_bits][j];
                     if (s->high_band_coded[ch][j]) {
-                        int e2fix, vfix; 
+                        int vfix; 
+                        long long e2fix;
                         e2fix = 0;
                         for(i = 0;i < n; i++) {
-                          vfix = exponents_fix[i<<bsize>>esize]; 
-                          e2fix += FIX_MULT(vfix, vfix);
+                          vfix = exponents_fix[i<<bsize>>esize];
+                          e2fix += FIX_MULT16(vfix, vfix);            //fixed16
                         }
-                        exp_power_fix[j] = e2fix / n;
-                        last_high_band = j;
+                        //exp_power_fix[j] = e2fix / n;
+                        vfix = FIX16_DIVINT (e2fix, n);    //fixed16
+                        exp_power_fix[j] = vfix;         //fixed16
+                        if (vfix != 0)
+                          last_high_band = j;
                     }
                     exponents_fix += n<<bsize;
                 }
-
                 /* main freqs and high freqs */
                 exponents_fix = s->exponents_fix[ch] + (s->coefs_start<<bsize);
                 for(j=-1;j<n1;j++) {
@@ -1117,29 +1454,42 @@ static int wma_decode_block(WMACodecContext *s)
                                                   s->block_len_bits][j];
                     }
                     if (j >= 0 && s->high_band_coded[ch][j]) {
-                        /* use noise with specified power */
-                        mult1_fix = sqrtint (FIX_DIV(exp_power_fix[j],
-                                              exp_power_fix[last_high_band]));
+                        /* use noise with specified power */    
+                        if(exp_power_fix[last_high_band]==0){
+                            mult1_fix=1<<31;
+                        }else{
+                            mult1_fix = sqrtint (FIX16_DIV(exp_power_fix[j],
+                                             exp_power_fix[last_high_band]));
+                        }
+                        if (mult1_fix == 0)
+                          mult1_fix = ((1 << 31) - 8);
                         /* XXX: use a table */
-                        mult1_fix = FIX_MULT(mult1_fix, 
-                                      fixedpow10(s->high_band_values[ch][j] * 3277 /*0.05*/));
-                        mult1_fix = FIX_DIV(mult1_fix, 
-                                      FIX_MULT(s->max_exponent_fix[ch], s->noise_mult_fix));
-                        mult1_fix = FIXF2_MULT (mult1_fix, mdct_norm_fix);
+                        mult1_fix = FIX_MULT18(pow_table[s->high_band_values[ch][j]], mult1_fix);  //fixed14
+                        mult1_fix = FIX16_DIV(mult1_fix, 
+                                      FIX_MULT16(s->max_exponent_fix[ch], s->noise_mult_fix));  //fixed14
+                        mult1_fix = FIX_MULT16 (mult1_fix, mdct_norm_fix);   // fixed14
                         for(i = 0;i < n; i++) {
+                            int tmp;
                             noise_fix = s->noise_table_fix[s->noise_index];
                             s->noise_index = (s->noise_index + 1) & (NOISE_TAB_SIZE - 1);
-                            *coefs_fix++ = FIX_MULT3( noise_fix,
-                                  exponents_fix[i<<bsize>>esize],  mult1_fix);
+                            tmp = FIX_MULT16 (mult1_fix, exponents_fix[i<<bsize>>esize]);  //fixed14
+                            tmp = FIX_MULT16 (tmp, noise_fix);  // fixed14
+                            *coefs_fix++ = (tmp >> 0);
+                            //*coefs_fix++ = FIX_MULT3( noise_fix,
+                            //      exponents_fix[i<<bsize>>esize],  (mult1_fix >> 6));
                         }
                         exponents_fix += n<<bsize;
                     } else {
                         /* coded values + small noise */
                         for(i = 0;i < n; i++) {
+                            int tmp;
                             noise_fix = s->noise_table_fix[s->noise_index];
                             s->noise_index = (s->noise_index + 1) & (NOISE_TAB_SIZE - 1);
-                            *coefs_fix++ = FIX_MULT3 ((((*coefs1++) << FRAC_BIT) + noise_fix),
-                                             exponents_fix[i<<bsize>>esize],  mult_fix);
+                            //*coefs_fix++ = FIX_MULT3 ((((*coefs1++) << FRAC_BIT) + noise_fix),
+                            //                 exponents_fix[i<<bsize>>esize],  (mult_fix >> 8));
+                            tmp = FIX_MULT16 (exponents_fix[i<<bsize>>esize], mult_fix);   //fixed16
+                            tmp = FIX_MULT18 (tmp, (((*coefs1++) << 16) + noise_fix));  //fixed14
+                            *coefs_fix++ = (tmp >> 0);
                         }
                         exponents_fix += n<<bsize;
                     }
@@ -1147,9 +1497,11 @@ static int wma_decode_block(WMACodecContext *s)
 
                 /* very high freqs : noise */
                 n = s->block_len - s->coefs_end[bsize];
-                mult1_fix = FIX_MULT (mult_fix,  exponents_fix[((-1<<bsize))>>esize]);
+                //mult1_fix = FIX_MULT16 ((mult_fix >> 8),  exponents_fix[((-1<<bsize))>>esize]);
+                mult1_fix = FIX_MULT16 (mult_fix,  exponents_fix[((-1<<bsize))>>esize]);    //fixed16
                 for(i = 0; i < n; i++) {
-                  *coefs_fix++ = FIX_MULT (s->noise_table_fix[s->noise_index], mult1_fix);
+                  //*coefs_fix++ = FIX_MULT (s->noise_table_fix[s->noise_index], mult1_fix);
+                  *coefs_fix++ = (FIX_MULT18 (s->noise_table_fix[s->noise_index], mult1_fix) >> 0);  //fixed14
                   s->noise_index = (s->noise_index + 1) & (NOISE_TAB_SIZE - 1);
                 }
             } else {
@@ -1158,8 +1510,12 @@ static int wma_decode_block(WMACodecContext *s)
                   *coefs_fix++ = 0; 
                 n = nb_coefs[ch];
                 for(i = 0;i < n; i++) {
-                    *coefs_fix++ = FIX_MULT3 ((coefs1[i] << FRAC_BIT), 
-                                     exponents_fix[i<<bsize>>esize], mult_fix);
+                  int tmp;
+                  //  *coefs_fix++ = FIX_MULT3 ((coefs1[i] << FRAC_BIT), 
+                  //                   exponents_fix[i<<bsize>>esize], (mult_fix >> 8));
+                  tmp = FIX_MULT16 (exponents_fix[i<<bsize>>esize], mult_fix);   //fixed16
+                  tmp = FIX_MULT18 (tmp, (coefs1[i] << 16));    //fixed14
+                  *coefs_fix++ = (tmp >> 0);
                 }
                 n = s->block_len - s->coefs_end[bsize];
                 for(i = 0;i < n; i++)
@@ -1219,7 +1575,7 @@ static int wma_decode_block(WMACodecContext *s)
             /* specific fast case for ms-stereo : add to second
                channel if it is not coded */
             if (s->ms_stereo && !s->channel_coded[1]) {
-                wma_window(s, &s->frame_outfix[ch][index]);
+                wma_window(s, &s->frame_outfix[1][index]);
             }
         }
     }
@@ -1263,7 +1619,7 @@ static int wma_decode_frame(WMACodecContext *s, int16_t *samples)
         iptrfix = s->frame_outfix[ch];
 
         for(i=0;i<n;i++) {
-            *ptr = av_clip_int16((*iptrfix++) >> FRAC_BIT);
+            *ptr = av_clip_int16((*iptrfix++) >> 14);
             ptr += incr;
         }
         /* prepare for next block */

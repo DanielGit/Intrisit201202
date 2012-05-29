@@ -40,7 +40,7 @@ VD_PLUGIN = mpcodecs_vd_realvid  \
 
 
 #
-MLIBS := libmplugin.a libavcodec_p.a libmpcodecs_p.a libavutil.a libwmafix.a libmpeg2.a libfaad2.a liba52.a spc.a fipop.a librv89_aac.a libmad.a \
+MLIBS := libmplugin.a libavcodec_p.a libmpcodecs_p.a libavutil.a libmpeg2.a libfaad2.a liba52.a spc.a fipop.a librv89_aac.a libmad.a \
          libavcodec_p.a librv89_jz4740.a libxvidcore.a
 LIBS :=  $(addprefix $(TOP)/UsrLib/LibOut/JZ4750L/, $(MLIBS))
 LIBS 	+= $(TOP)/Usrlib/libout/libgcc_mipsel.a $(TOP)/Usrlib/libout/mips_klibc.a

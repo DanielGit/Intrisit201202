@@ -22,7 +22,7 @@
 #include "avcodec.h"
 #include "wmafixed.h"
 #include "wmadata.h"
-#include "fixed.h"
+#include "fixedpoint.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -302,6 +302,7 @@ int ff_wma_init(AVCodecContext * avctx, int flags2)
     }
 #endif
 
+
     /* init MDCT windows : simple sinus window */
     for(i = 0; i < s->nb_block_sizes; i++) {
         int n, j;
@@ -311,7 +312,7 @@ int ff_wma_init(AVCodecContext * avctx, int flags2)
         alpha = M_PI / (2.0 * n);
         for(j=0;j<n;j++) {
             w = sin((j + 0.5) * alpha);
-            windowfix[j] = FIXED (w);
+            windowfix[j] = FIXED16 (w);
         }
         s->windowsfix[i] = windowfix;
     }
@@ -319,12 +320,13 @@ int ff_wma_init(AVCodecContext * avctx, int flags2)
     s->reset_block_lengths = 1;
 
     if (s->use_noise_coding) {
+        float mult_fix;
 
         /* init the noise generator */
         if (s->use_exp_vlc)
-            s->noise_mult_fix = FIXED(0.02);
+            s->noise_mult_fix = FIXED16((mult_fix = 0.02));
         else
-            s->noise_mult_fix = FIXED(0.04);
+            s->noise_mult_fix = FIXED16((mult_fix = 0.04));
 
 #ifdef TRACE
         for(i=0;i<NOISE_TAB_SIZE;i++)
@@ -334,12 +336,12 @@ int ff_wma_init(AVCodecContext * avctx, int flags2)
             unsigned int seed;
             float norm;
             seed = 1;
-            norm = (1.0 / (float)(1LL << 31)) * sqrt(3) * FLOAT(s->noise_mult_fix);
+            norm = (1.0 / (float)(1LL << 31)) * sqrt(3) * mult_fix;
             for(i=0;i<NOISE_TAB_SIZE;i++) {
                 float noise;
                 seed = seed * 314159 + 1;
                 noise = (float)((int)seed) * norm;
-                s->noise_table_fix[i] = FIXED(noise);
+                s->noise_table_fix[i] = FIXED16(noise);
             }
         }
 #endif
